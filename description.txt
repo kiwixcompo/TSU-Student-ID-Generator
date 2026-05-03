@@ -1,0 +1,1 @@
+TSU Student ID Generator - A Next.js web application for Taraba State University for student registration, automated digital ID card generation, built-in QR Code verification, and high-resolution PNG exporting.
