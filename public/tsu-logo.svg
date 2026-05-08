@@ -1,0 +1,7 @@
+<!-- TSU Logo Placeholder -->
+<!-- Replace this file with the actual Taraba State University logo image -->
+<!-- The logo should be saved as tsu-logo.png or tsu-logo.svg in the public folder -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="95" fill="#2563eb" stroke="#fbbf24" stroke-width="8"/>
+  <text x="100" y="110" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#fbbf24" text-anchor="middle">TSU</text>
+</svg>

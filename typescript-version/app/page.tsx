@@ -7,9 +7,18 @@ export default function Home() {
       <div className="max-w-3xl w-full bg-white rounded-xl shadow-sm border border-slate-200 p-8 md:p-12 text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-green-600"></div>
         <div className="mb-8 flex justify-center">
-          <div className="w-16 h-16 bg-green-800 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm border border-green-900 border-b-4">
-            TSU
-          </div>
+          <img 
+            src="/tsu-logo.png" 
+            alt="Taraba State University Logo" 
+            className="w-20 h-20 object-contain drop-shadow-md"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              const fallback = document.createElement('div');
+              fallback.className = 'w-16 h-16 bg-green-800 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm border border-green-900 border-b-4';
+              fallback.textContent = 'TSU';
+              e.currentTarget.parentElement?.appendChild(fallback);
+            }}
+          />
         </div>
         <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-2 tracking-tight uppercase">
           Taraba State University

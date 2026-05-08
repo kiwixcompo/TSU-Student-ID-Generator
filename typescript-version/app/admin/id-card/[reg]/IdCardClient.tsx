@@ -138,7 +138,7 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
             <img 
               src={logoSrc} 
               alt="TSU Logo" 
-              className="w-14 h-14 object-contain mb-1.5 drop-shadow-md" 
+              className="w-16 h-16 object-contain mb-1.5 drop-shadow-md" 
               onError={(e) => { 
                 e.currentTarget.src = 'https://via.placeholder.com/150/ffffff/008000?text=LOGO'; 
               }} 
@@ -179,10 +179,10 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
           {/* Info Section with Vertical Bar */}
           <div className="flex flex-1 w-full relative z-10 items-stretch mb-1">
             {/* The vertical bar */}
-            <div className="w-8 ml-3 bg-green-700 rounded-t-xl relative flex items-center justify-center shadow-inner overflow-hidden shrink-0 self-stretch mt-1.5">
+            <div className="w-9 ml-3 bg-green-700 rounded-t-xl relative flex items-center justify-center shadow-inner overflow-hidden shrink-0 self-stretch mt-1.5">
               <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent"></div>
               <span 
-                className="text-white text-[9px] font-extrabold uppercase tracking-widest drop-shadow-sm whitespace-nowrap z-10"
+                className="text-white text-[8.5px] font-extrabold uppercase tracking-[0.08em] drop-shadow-sm whitespace-nowrap z-10 leading-[1.3]"
                 style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
               >
                 STUDENT ID CARD
