@@ -1,9 +1,6 @@
 -- TSU Student ID Generator Database Schema
 -- MySQL Database Setup
-
-CREATE DATABASE IF NOT EXISTS tsu_id_generator CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-USE tsu_id_generator;
+-- Import this into the existing database: tsuniver_tsu_id_generator
 
 -- Students Table
 CREATE TABLE IF NOT EXISTS students (
