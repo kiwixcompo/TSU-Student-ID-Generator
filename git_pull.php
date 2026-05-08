@@ -50,12 +50,22 @@ $rsync = run(
     . ' --exclude=config.php'          // keep live config intact
     . ' --exclude=git_pull.php'        // keep this deploy script
     . ' --exclude=deploy.log'          // keep log
+    . ' --exclude=logs/'               // keep log directory
     . ' --exclude=typescript-version/' // skip TS source
     . ' --exclude=.git/'
     . ' ' . escapeshellarg(REPO_DIR . '/')
     . ' ' . escapeshellarg(WEB_ROOT . '/')
 );
 log_msg("rsync: " . trim($rsync));
+
+// ── Step 2b: First-time setup – copy production config if config.php missing ──
+$liveConfig = WEB_ROOT . '/config.php';
+$prodConfig = WEB_ROOT . '/config.production.php';
+if (!file_exists($liveConfig) && file_exists($prodConfig)) {
+    copy($prodConfig, $liveConfig);
+    echo "First-time setup: config.production.php copied to config.php\n";
+    log_msg("First-time setup: config.php created from config.production.php");
+}
 
 // ── Step 3: Fix permissions ───────────────────────────────────────────────────
 echo "\n--- Step 3: permissions ---\n";
