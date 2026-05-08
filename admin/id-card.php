@@ -49,6 +49,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ID Card – <?php echo e($student['first_name'] . ' ' . $student['last_name']); ?></title>
+    <link rel="icon" type="image/png" href="<?php echo asset('public/tsu-logo.png'); ?>">
     <link rel="stylesheet" href="<?php echo asset('assets/css/style.css'); ?>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>

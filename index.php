@@ -9,6 +9,7 @@ initSession();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo APP_NAME; ?></title>
+    <link rel="icon" type="image/png" href="<?php echo asset('public/tsu-logo.png'); ?>">
     <link rel="stylesheet" href="<?php echo asset('assets/css/style.css'); ?>">
     <style>
         .hero {
