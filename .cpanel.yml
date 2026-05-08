@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/tsuniver/sig.tsuniversity.ng
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/cp -rf /home/tsuniver/repositories/TSU-Student-ID-Generator/. $DEPLOYPATH/
