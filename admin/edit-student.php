@@ -489,13 +489,39 @@ function populateCourses(facName, deptName, selCos) {
         cosSel.appendChild(o);
 
         if (isIDELL) {
-            const pgVal = 'PG. ' + p;
+            const pgVal = 'PG. ' + stripDegreePrefix(p);
             const pg = document.createElement('option');
             pg.value = pgVal; pg.textContent = pgVal;
             if (pgVal === selCos) pg.selected = true;
             cosSel.appendChild(pg);
         }
     });
+}
+
+/**
+ * Strips any degree prefix from a programme name.
+ * e.g. "B. Sc. Economics" → "Economics"
+ *      "B. A. (Ed) English" → "English"
+ *      "B. Eng (Hons) Civil Engineering" → "Civil Engineering"
+ *      "LLB Law" → "Law"
+ *      "BNSc Nursing" → "Nursing"
+ */
+function stripDegreePrefix(prog) {
+    return prog
+        .replace(/^B\.\s*Agric\s*\(Ed\)\s*/i, '')
+        .replace(/^B\.\s*Agric[\.\-]?\s*/i, '')
+        .replace(/^B\.\s*Eng\s*\(Hons\)\s*/i, '')
+        .replace(/^B\.\s*Sc\.\s*\(Ed\)\s*/i, '')
+        .replace(/^B\.\s*Sc[\.\-]?\s*/i, '')
+        .replace(/^B\.\s*A\.\s*\(Ed\)\s*/i, '')
+        .replace(/^B\.\s*A[\.\-]?\s*/i, '')
+        .replace(/^B\.\s*Ed\s*/i, '')
+        .replace(/^B\.\s*Library\s*&?\s*Info\s*Science\s*/i, '')
+        .replace(/^B\.\s*Forest\s*Resource\s*and\s*/i, '')
+        .replace(/^BMLS\s*/i, '')
+        .replace(/^BNSc\s*/i, '')
+        .replace(/^LLB\s*/i, '')
+        .trim();
 }
 
 // ── Photo preview ──

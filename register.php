@@ -425,12 +425,12 @@ $tsuData = getTsuData();
                             opt.textContent = prog;
                             courseSelect.appendChild(opt);
 
-                            // PG version for IDELL
+                            // PG version for IDELL — strip degree prefix, prepend "PG."
                             if (isIDELL) {
-                                const pgProg = 'PG. ' + prog;
+                                const pgName = 'PG. ' + stripDegreePrefix(prog);
                                 const pgOpt = document.createElement('option');
-                                pgOpt.value = pgProg;
-                                pgOpt.textContent = pgProg;
+                                pgOpt.value = pgName;
+                                pgOpt.textContent = pgName;
                                 courseSelect.appendChild(pgOpt);
                             }
                         });
@@ -455,6 +455,33 @@ $tsuData = getTsuData();
                 }
             });
         });
+
+        /**
+         * Strips any degree prefix from a programme name.
+         * e.g. "B. Sc. Economics" → "Economics"
+         *      "B. A. (Ed) English" → "English"
+         *      "B. Eng (Hons) Civil Engineering" → "Civil Engineering"
+         *      "LLB Law" → "Law"
+         *      "BNSc Nursing" → "Nursing"
+         */
+        function stripDegreePrefix(prog) {
+            return prog
+                // Remove common degree prefixes (order matters — longer first)
+                .replace(/^B\.\s*Agric\s*\(Ed\)\s*/i, '')
+                .replace(/^B\.\s*Agric[\.\-]?\s*/i, '')
+                .replace(/^B\.\s*Eng\s*\(Hons\)\s*/i, '')
+                .replace(/^B\.\s*Sc\.\s*\(Ed\)\s*/i, '')
+                .replace(/^B\.\s*Sc[\.\-]?\s*/i, '')
+                .replace(/^B\.\s*A\.\s*\(Ed\)\s*/i, '')
+                .replace(/^B\.\s*A[\.\-]?\s*/i, '')
+                .replace(/^B\.\s*Ed\s*/i, '')
+                .replace(/^B\.\s*Library\s*&?\s*Info\s*Science\s*/i, '')
+                .replace(/^B\.\s*Forest\s*Resource\s*and\s*/i, '')
+                .replace(/^BMLS\s*/i, '')
+                .replace(/^BNSc\s*/i, '')
+                .replace(/^LLB\s*/i, '')
+                .trim();
+        }
         
         // Photo preview
         const photoInput = document.getElementById('passport_photo');
