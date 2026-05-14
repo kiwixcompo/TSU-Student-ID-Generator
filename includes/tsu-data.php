@@ -1,9 +1,74 @@
 <?php
 /**
  * TSU Faculties, Departments, and Programmes Data
+ *
+ * Reads from the database (faculties / departments / courses tables).
+ * Falls back to the static array if the DB tables don't exist yet.
  */
 
-function getTsuData() {
+function getTsuData(): array {
+    // ── Try DB first ──────────────────────────────────────────────────────────
+    try {
+        $db = getDB();
+
+        // Quick check: does the faculties table exist?
+        $check = $db->query("SHOW TABLES LIKE 'faculties'");
+        if ($check->rowCount() === 0) {
+            return _getTsuDataStatic();
+        }
+
+        $facRows = $db->query(
+            "SELECT id, name FROM faculties ORDER BY sort_order, name"
+        )->fetchAll();
+
+        if (empty($facRows)) {
+            return _getTsuDataStatic();
+        }
+
+        $deptStmt = $db->prepare(
+            "SELECT id, name FROM departments WHERE faculty_id = ? ORDER BY sort_order, name"
+        );
+        $courseStmt = $db->prepare(
+            "SELECT name FROM courses WHERE department_id = ? ORDER BY sort_order, name"
+        );
+
+        $result = [];
+        foreach ($facRows as $fac) {
+            $deptStmt->execute([$fac['id']]);
+            $depts = $deptStmt->fetchAll();
+
+            $deptArr = [];
+            foreach ($depts as $dept) {
+                $courseStmt->execute([$dept['id']]);
+                $courses = $courseStmt->fetchAll(PDO::FETCH_COLUMN);
+                $deptArr[] = [
+                    'id'         => $dept['id'],
+                    'name'       => $dept['name'],
+                    'programmes' => $courses,
+                ];
+            }
+
+            $result[] = [
+                'id'          => $fac['id'],
+                'faculty'     => $fac['name'],
+                'departments' => $deptArr,
+            ];
+        }
+
+        return $result;
+
+    } catch (Exception $e) {
+        // DB not available — fall back to static data
+        return _getTsuDataStatic();
+    }
+}
+
+function getTsuDataJson(): string {
+    return json_encode(getTsuData());
+}
+
+// ── Static fallback (original hard-coded data) ────────────────────────────────
+function _getTsuDataStatic(): array {
     return [
         [
             'faculty' => 'Faculty of Agriculture',
@@ -14,8 +79,8 @@ function getTsuData() {
                 ['name' => 'Crop Production', 'programmes' => ['B. Agric. Crop protection']],
                 ['name' => 'Forestry & Wildlife Conservation', 'programmes' => ['B. Forest Resource and Wild life Management']],
                 ['name' => 'Home Economics', 'programmes' => ['B.Sc- Home Economics']],
-                ['name' => 'Soil Science & Land Resources Mgmt', 'programmes' => ['B. Agric- Soil Science & Land Resources Mgmt']]
-            ]
+                ['name' => 'Soil Science & Land Resources Mgmt', 'programmes' => ['B. Agric- Soil Science & Land Resources Mgmt']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Arts',
@@ -25,14 +90,14 @@ function getTsuData() {
                 ['name' => 'French', 'programmes' => ['B. A. French']],
                 ['name' => 'History', 'programmes' => ['B. A. History']],
                 ['name' => 'Arabic studies', 'programmes' => ['B. A. Arabic']],
-                ['name' => 'Languages & Linguistic', 'programmes' => ['B. A. Hausa', 'B. A. Linguistic (English)', 'B. A. Linguistic Mumuye', 'B. A. Linguistic Hausa']]
-            ]
+                ['name' => 'Languages & Linguistic', 'programmes' => ['B. A. Hausa', 'B. A. Linguistic (English)', 'B. A. Linguistic Mumuye', 'B. A. Linguistic Hausa']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Communication & Media',
             'departments' => [
-                ['name' => 'Mass Communication', 'programmes' => ['B. Sc. Mass Communication']]
-            ]
+                ['name' => 'Mass Communication', 'programmes' => ['B. Sc. Mass Communication']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Education',
@@ -44,8 +109,8 @@ function getTsuData() {
                 ['name' => 'Human Kinetics & Physical Education', 'programmes' => ['B. Sc. (Ed) Human Kinetics', 'B. Sc. (Ed) Health Education']],
                 ['name' => 'Social Science Education', 'programmes' => ['B. Sc. (Ed) Economics', 'B. Sc. (Ed) Geography', 'B. Sc. (Ed) Political Science', 'B. Sc. (Ed) Social Studies Education']],
                 ['name' => 'Vocational & Technology Education', 'programmes' => ['B. Agric (Ed) Agric Education', 'B. Ed Bussiness Education', 'B. Sc. (Ed) Computer Science', 'B. Sc. (Ed) Industrial Technology Education']],
-                ['name' => 'Library & Info Science', 'programmes' => ['B. Library & Info Science']]
-            ]
+                ['name' => 'Library & Info Science', 'programmes' => ['B. Library & Info Science']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Engineering',
@@ -53,8 +118,8 @@ function getTsuData() {
                 ['name' => 'Agric & Bio-Resources Engineering', 'programmes' => ['B. Eng (Hons) Agric & Bio-Resources Engineering']],
                 ['name' => 'Electrical/Electronics Engineering', 'programmes' => ['B. Eng (Hons) Electrical/Electronics Engineering']],
                 ['name' => 'Civil Engineering', 'programmes' => ['B. Eng (Hons) Civil Engineering']],
-                ['name' => 'Mechanical Engineering', 'programmes' => ['B. Eng (Hons) Mechanical Engineering', 'B. Eng (Hons) Mining and Mineral Processing Engineering']]
-            ]
+                ['name' => 'Mechanical Engineering', 'programmes' => ['B. Eng (Hons) Mechanical Engineering', 'B. Eng (Hons) Mining and Mineral Processing Engineering']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Health Sciences',
@@ -62,15 +127,15 @@ function getTsuData() {
                 ['name' => 'Environmental Health', 'programmes' => ['B. Sc. Environmental Health']],
                 ['name' => 'Public Health', 'programmes' => ['B. Sc. Public Health']],
                 ['name' => 'Nursing', 'programmes' => ['BNSc Nursing']],
-                ['name' => 'Medical Lab Science', 'programmes' => ['BMLS Medical Lab Science']]
-            ]
+                ['name' => 'Medical Lab Science', 'programmes' => ['BMLS Medical Lab Science']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Law',
             'departments' => [
                 ['name' => 'Public Law', 'programmes' => ['LLB Law']],
-                ['name' => 'Private & Property Law', 'programmes' => ['LLB Law']]
-            ]
+                ['name' => 'Private & Property Law', 'programmes' => ['LLB Law']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Management Sciences',
@@ -78,8 +143,8 @@ function getTsuData() {
                 ['name' => 'Accounting', 'programmes' => ['B. Sc. Accounting']],
                 ['name' => 'Business Administration', 'programmes' => ['B. Sc. Business Administration']],
                 ['name' => 'Public Administration', 'programmes' => ['B. Sc. Public Administration']],
-                ['name' => 'Hospitality and Tourism Management', 'programmes' => ['B. Sc. Tourism and Hospitality Management']]
-            ]
+                ['name' => 'Hospitality and Tourism Management', 'programmes' => ['B. Sc. Tourism and Hospitality Management']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Science',
@@ -87,8 +152,8 @@ function getTsuData() {
                 ['name' => 'Biological Sciences', 'programmes' => ['B. Sc. Biochemistry', 'B. Sc. Biotechnology', 'B. Sc. Botany', 'B Sc. Microbiology', 'B. Sc. Zoology']],
                 ['name' => 'Chemical Sciences', 'programmes' => ['B. Sc. Chemistry', 'B. Sc. Industrial Chemistry']],
                 ['name' => 'Mathematics and Statistics', 'programmes' => ['B. Sc. Mathematics', 'B. Sc. Statistics']],
-                ['name' => 'Physics', 'programmes' => ['B. Sc. Physics']]
-            ]
+                ['name' => 'Physics', 'programmes' => ['B. Sc. Physics']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Computing & Artificial Intelligence',
@@ -96,8 +161,8 @@ function getTsuData() {
                 ['name' => 'Computer Science', 'programmes' => ['B. Sc. Computer Science']],
                 ['name' => 'Data Science and Artificial Intelligence', 'programmes' => ['B. Sc. Data Science']],
                 ['name' => 'Information and Communication Technology', 'programmes' => ['B. Sc. Information and Communication Technology']],
-                ['name' => 'Software Engineering', 'programmes' => ['B. Sc. Software Engineering']]
-            ]
+                ['name' => 'Software Engineering', 'programmes' => ['B. Sc. Software Engineering']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Social Sciences',
@@ -107,19 +172,15 @@ function getTsuData() {
                 ['name' => 'Political & International Relations', 'programmes' => ['B. Sc. Political & International Relations']],
                 ['name' => 'Peace & Conflict Studies', 'programmes' => ['B. Sc. Peace & Conflict Studies']],
                 ['name' => 'Sociology', 'programmes' => ['B. Sc. Sociology']],
-                ['name' => 'Social Work & Community Development', 'programmes' => ['B. Sc. Social Work & Community Development']]
-            ]
+                ['name' => 'Social Work & Community Development', 'programmes' => ['B. Sc. Social Work & Community Development']],
+            ],
         ],
         [
             'faculty' => 'Faculty of Religion & Philosophy',
             'departments' => [
                 ['name' => 'Islamic Studies', 'programmes' => ['B. A. ISL']],
-                ['name' => 'CRS', 'programmes' => ['B. A. CRS']]
-            ]
-        ]
+                ['name' => 'CRS', 'programmes' => ['B. A. CRS']],
+            ],
+        ],
     ];
-}
-
-function getTsuDataJson() {
-    return json_encode(getTsuData());
 }
