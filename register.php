@@ -410,6 +410,7 @@ $tsuData = getTsuData();
         departmentSelect?.addEventListener('change', function() {
             const selectedFaculty = facultySelect.value;
             const selectedDepartment = this.value;
+            const isIDELL = document.querySelector('input[name="programme"]:checked')?.value === 'IDELL';
             courseSelect.innerHTML = '<option value="">Select Course of Study</option>';
             
             if (selectedFaculty && selectedDepartment) {
@@ -418,10 +419,20 @@ $tsuData = getTsuData();
                     const department = faculty.departments.find(d => d.name === selectedDepartment);
                     if (department && department.programmes.length > 0) {
                         department.programmes.forEach(prog => {
-                            const option = document.createElement('option');
-                            option.value = prog;
-                            option.textContent = prog;
-                            courseSelect.appendChild(option);
+                            // Regular programme
+                            const opt = document.createElement('option');
+                            opt.value = prog;
+                            opt.textContent = prog;
+                            courseSelect.appendChild(opt);
+
+                            // PG version for IDELL
+                            if (isIDELL) {
+                                const pgProg = 'PG. ' + prog;
+                                const pgOpt = document.createElement('option');
+                                pgOpt.value = pgProg;
+                                pgOpt.textContent = pgProg;
+                                courseSelect.appendChild(pgOpt);
+                            }
                         });
                         courseContainer.style.display = 'block';
                         courseSelect.required = true;
@@ -434,6 +445,15 @@ $tsuData = getTsuData();
                 courseContainer.style.display = 'none';
                 courseSelect.required = false;
             }
+        });
+
+        // Re-populate courses when programme radio changes (in case dept already selected)
+        document.querySelectorAll('input[name="programme"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (departmentSelect.value) {
+                    departmentSelect.dispatchEvent(new Event('change'));
+                }
+            });
         });
         
         // Photo preview

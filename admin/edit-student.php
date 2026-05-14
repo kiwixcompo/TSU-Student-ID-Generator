@@ -448,6 +448,13 @@ if (facSel) {
     deptSel.addEventListener('change', function () {
         populateCourses(facSel.value, this.value, '');
     });
+    // Re-populate courses when programme changes
+    const progSel = document.querySelector('select[name="programme"]');
+    if (progSel) {
+        progSel.addEventListener('change', function () {
+            if (deptSel.value) populateCourses(facSel.value, deptSel.value, cosSel.value);
+        });
+    }
 }
 
 function populateDepts(facName, selDept, selCos) {
@@ -470,11 +477,24 @@ function populateCourses(facName, deptName, selCos) {
     if (!fac) return;
     const dept = fac.departments.find(d => d.name === deptName);
     if (!dept) return;
+
+    // Detect IDELL from the programme select
+    const progSel = document.querySelector('select[name="programme"]');
+    const isIDELL = progSel && progSel.value === 'IDELL';
+
     dept.programmes.forEach(p => {
         const o = document.createElement('option');
         o.value = p; o.textContent = p;
         if (p === selCos) o.selected = true;
         cosSel.appendChild(o);
+
+        if (isIDELL) {
+            const pgVal = 'PG. ' + p;
+            const pg = document.createElement('option');
+            pg.value = pgVal; pg.textContent = pgVal;
+            if (pgVal === selCos) pg.selected = true;
+            cosSel.appendChild(pg);
+        }
     });
 }
 

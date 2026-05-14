@@ -106,7 +106,8 @@ function getTsuData() {
                 ['name' => 'Geography', 'programmes' => ['B. Sc. Geography']],
                 ['name' => 'Political & International Relations', 'programmes' => ['B. Sc. Political & International Relations']],
                 ['name' => 'Peace & Conflict Studies', 'programmes' => ['B. Sc. Peace & Conflict Studies']],
-                ['name' => 'Sociology', 'programmes' => ['B. Sc. Sociology']]
+                ['name' => 'Sociology', 'programmes' => ['B. Sc. Sociology']],
+                ['name' => 'Social Work & Community Development', 'programmes' => ['B. Sc. Social Work & Community Development']]
             ]
         ],
         [
