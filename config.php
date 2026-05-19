@@ -20,11 +20,22 @@ if ($isProduction) {
     define('APP_URL',   'https://sig.tsuniversity.ng');
     define('BASE_PATH', __DIR__);
 
-    // Suppress errors on production
+    // Suppress errors on production, log them instead
     error_reporting(E_ALL);
     ini_set('display_errors', 0);
     ini_set('log_errors',     1);
-    ini_set('error_log',      __DIR__ . '/logs/php_errors.log');
+
+    // Auto-create logs directory and error log file if missing
+    $logDir  = __DIR__ . '/logs';
+    $logFile = $logDir . '/php_errors.log';
+    if (!is_dir($logDir)) {
+        @mkdir($logDir, 0755, true);
+    }
+    if (!file_exists($logFile)) {
+        @file_put_contents($logFile, "=== TSU Error Log created " . date('Y-m-d H:i:s') . " ===\n");
+        @chmod($logFile, 0644);
+    }
+    ini_set('error_log', $logFile);
 
 } else {
     // ── LOCAL DEVELOPMENT (localhost) ─────────────────────────────────────────
@@ -77,4 +88,25 @@ function asset(string $path): string {
     $fullPath = BASE_PATH . '/' . $path;
     $version  = file_exists($fullPath) ? filemtime($fullPath) : time();
     return APP_URL . '/' . $path . '?v=' . $version;
+}
+
+// ── Auto-logging error handler (production only) ──────────────────────────────
+if ($isProduction) {
+    // Catch fatal errors that PHP can't intercept normally
+    register_shutdown_function(function () {
+        $err = error_get_last();
+        if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+            $logFile = BASE_PATH . '/logs/php_errors.log';
+            $logDir  = dirname($logFile);
+            if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+            $msg = sprintf(
+                "[%s] FATAL %s in %s on line %d\n",
+                date('Y-m-d H:i:s'),
+                $err['message'],
+                $err['file'],
+                $err['line']
+            );
+            @file_put_contents($logFile, $msg, FILE_APPEND | LOCK_EX);
+        }
+    });
 }

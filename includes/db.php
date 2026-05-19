@@ -48,6 +48,13 @@ function getDB() {
     return Database::getInstance()->getConnection();
 }
 
+// Columns safe for list queries — excludes the huge passport_photo BLOB
+define('STUDENT_LIST_COLS',
+    'id, programme, first_name, middle_name, last_name, reg_number,
+     blood_group, faculty, department, course_of_study,
+     created_at, status, admin_note, printed, printed_at'
+);
+
 // Student Functions
 function registerStudent($data) {
     $db = getDB();
@@ -86,14 +93,15 @@ function registerStudent($data) {
 
 function getStudents($programme = null) {
     $db = getDB();
-    
+    $cols = STUDENT_LIST_COLS;
+
     if ($programme && $programme !== 'SuperAdmin') {
-        $stmt = $db->prepare("SELECT * FROM students WHERE programme = ? ORDER BY created_at DESC");
+        $stmt = $db->prepare("SELECT $cols FROM students WHERE programme = ? ORDER BY created_at DESC");
         $stmt->execute([$programme]);
     } else {
-        $stmt = $db->query("SELECT * FROM students ORDER BY created_at DESC");
+        $stmt = $db->query("SELECT $cols FROM students ORDER BY created_at DESC");
     }
-    
+
     return $stmt->fetchAll();
 }
 
@@ -186,14 +194,14 @@ function updateStudent($id, $data) {
     return $stmt->execute($values);
 }
 
-// Search students by name or reg number
 function searchStudents($query, $programme = null) {
-    $db = getDB();
+    $db   = getDB();
+    $cols = STUDENT_LIST_COLS;
     $like = '%' . $query . '%';
 
     if ($programme && $programme !== 'SuperAdmin') {
         $stmt = $db->prepare("
-            SELECT * FROM students
+            SELECT $cols FROM students
             WHERE programme = ?
               AND (first_name LIKE ? OR last_name LIKE ? OR middle_name LIKE ? OR reg_number LIKE ?)
             ORDER BY last_name, first_name
@@ -202,7 +210,7 @@ function searchStudents($query, $programme = null) {
         $stmt->execute([$programme, $like, $like, $like, $like]);
     } else {
         $stmt = $db->prepare("
-            SELECT * FROM students
+            SELECT $cols FROM students
             WHERE first_name LIKE ? OR last_name LIKE ? OR middle_name LIKE ? OR reg_number LIKE ?
             ORDER BY last_name, first_name
             LIMIT 50
@@ -298,7 +306,11 @@ function verifyAdminPassword($username, $password) {
 }
 
 function verifyStudentPassword($reg_number, $password) {
-    $student = getStudentByRegNumber($reg_number);
+    $db   = getDB();
+    // Only fetch the fields needed for auth — avoids loading the passport_photo BLOB
+    $stmt = $db->prepare("SELECT id, reg_number, password, programme FROM students WHERE reg_number = ?");
+    $stmt->execute([$reg_number]);
+    $student = $stmt->fetch();
     if ($student && password_verify($password, $student['password'])) {
         return $student;
     }

@@ -410,7 +410,6 @@ $tsuData = getTsuData();
         departmentSelect?.addEventListener('change', function() {
             const selectedFaculty = facultySelect.value;
             const selectedDepartment = this.value;
-            const isIDELL = document.querySelector('input[name="programme"]:checked')?.value === 'IDELL';
             courseSelect.innerHTML = '<option value="">Select Course of Study</option>';
             
             if (selectedFaculty && selectedDepartment) {
@@ -419,20 +418,18 @@ $tsuData = getTsuData();
                     const department = faculty.departments.find(d => d.name === selectedDepartment);
                     if (department && department.programmes.length > 0) {
                         department.programmes.forEach(prog => {
-                            // Regular programme
+                            // Regular option
                             const opt = document.createElement('option');
                             opt.value = prog;
                             opt.textContent = prog;
                             courseSelect.appendChild(opt);
 
-                            // PG version for IDELL — strip degree prefix, prepend "PG."
-                            if (isIDELL) {
-                                const pgName = 'PG. ' + stripDegreePrefix(prog);
-                                const pgOpt = document.createElement('option');
-                                pgOpt.value = pgName;
-                                pgOpt.textContent = pgName;
-                                courseSelect.appendChild(pgOpt);
-                            }
+                            // PG option — always shown for every course
+                            const pgName = 'PG. ' + stripDegreePrefix(prog);
+                            const pgOpt = document.createElement('option');
+                            pgOpt.value = pgName;
+                            pgOpt.textContent = pgName;
+                            courseSelect.appendChild(pgOpt);
                         });
                         courseContainer.style.display = 'block';
                         courseSelect.required = true;
@@ -447,14 +444,7 @@ $tsuData = getTsuData();
             }
         });
 
-        // Re-populate courses when programme radio changes (in case dept already selected)
-        document.querySelectorAll('input[name="programme"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (departmentSelect.value) {
-                    departmentSelect.dispatchEvent(new Event('change'));
-                }
-            });
-        });
+        // Remove the programme-change re-fire since PG is now always shown
 
         /**
          * Strips any degree prefix from a programme name.
