@@ -9,15 +9,49 @@ initSession();
 requireAdminAuth();
 
 $session = getAdminSession();
-$students = getStudents($session['programme_managed']);
 $tsuData = getTsuData();
 
-// Extract unique years from registration numbers
-$years = array_unique(array_map(function($s) {
-    return extractYearFromRegNumber($s['reg_number']);
-}, $students));
+// ── Pagination & per-page ─────────────────────────────────────────────────────
+$allowedPerPage = [10, 25, 50, 100];
+$perPage = (int) get('per_page', 10);
+if (!in_array($perPage, $allowedPerPage)) $perPage = 10;
+
+$page = max(1, (int) get('page', 1));
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+$filters = [
+    'search'     => get('search', ''),
+    'programme'  => get('programme', ''),
+    'status'     => get('status', ''),
+    'printed'    => get('printed', ''),
+    'year'       => get('year', ''),
+    'faculty'    => get('faculty', ''),
+    'department' => get('department', ''),
+];
+
+// ── Paginated data ────────────────────────────────────────────────────────────
+$result   = getStudentsPaginated($filters, $page, $perPage, $session['programme_managed']);
+$students = $result['rows'];
+$total    = $result['total'];
+$totalPages = max(1, (int) ceil($total / $perPage));
+if ($page > $totalPages) $page = $totalPages;
+
+// ── Stats (always full counts, unfiltered) ────────────────────────────────────
+$allStudents = getStudents($session['programme_managed']);
+$totalAll    = count($allStudents);
+$totalGen    = count(array_filter($allStudents, fn($s) => $s['status'] === 'id_generated'));
+$totalPend   = count(array_filter($allStudents, fn($s) => $s['status'] === 'pending'));
+
+// ── Years for filter dropdown ─────────────────────────────────────────────────
+$years = array_unique(array_map(fn($s) => extractYearFromRegNumber($s['reg_number']), $allStudents));
 sort($years);
 $years = array_reverse($years);
+
+// ── Build query string helper (preserves all params except page) ──────────────
+function pageUrl(int $p, array $extra = []): string {
+    $params = array_merge($_GET, $extra, ['page' => $p]);
+    return 'dashboard.php?' . http_build_query($params);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -266,6 +300,21 @@ $years = array_reverse($years);
             object-fit: cover;
             border: 2px solid var(--gray-200);
         }
+
+        .student-avatar-initial {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #3d4a8f 100%);
+            color: white;
+            font-size: .875rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            letter-spacing: .5px;
+        }
         
         .student-details h4 {
             font-size: 0.875rem;
@@ -377,6 +426,58 @@ $years = array_reverse($years);
             color: var(--gray-500);
             margin: 0;
         }
+
+        /* ── Pagination ── */
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .875rem 1.25rem;
+            border-top: 1px solid var(--gray-200);
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+        .pagination-info {
+            font-size: .8125rem;
+            color: var(--gray-600);
+        }
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            flex-wrap: wrap;
+        }
+        .pg-btn {
+            min-width: 34px;
+            height: 34px;
+            padding: 0 .6rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius);
+            background: white;
+            color: var(--gray-700);
+            font-size: .8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+        }
+        .pg-btn:hover:not(.pg-disabled):not(.pg-active) {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+        .pg-btn.pg-active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+        .pg-btn.pg-disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -429,7 +530,7 @@ $years = array_reverse($years);
                     </svg>
                 </div>
                 <div class="stat-info">
-                    <h3><?php echo count($students); ?></h3>
+                    <h3><?php echo $totalAll; ?></h3>
                     <p>Total Students</p>
                 </div>
             </div>
@@ -441,7 +542,7 @@ $years = array_reverse($years);
                     </svg>
                 </div>
                 <div class="stat-info">
-                    <h3><?php echo count(array_filter($students, fn($s) => $s['status'] === 'id_generated')); ?></h3>
+                    <h3><?php echo $totalGen; ?></h3>
                     <p>IDs Generated</p>
                 </div>
             </div>
@@ -453,7 +554,7 @@ $years = array_reverse($years);
                     </svg>
                 </div>
                 <div class="stat-info">
-                    <h3><?php echo count(array_filter($students, fn($s) => $s['status'] === 'pending')); ?></h3>
+                    <h3><?php echo $totalPend; ?></h3>
                     <p>Pending Review</p>
                 </div>
             </div>
@@ -528,14 +629,41 @@ $years = array_reverse($years);
                     <button type="submit" class="btn btn-primary btn-sm">Apply Filters</button>
                     <a href="dashboard.php" class="btn btn-secondary btn-sm">Clear All</a>
                 </div>
+                <!-- preserve per_page across filter submissions -->
+                <input type="hidden" name="per_page" value="<?php echo $perPage; ?>">
+                <input type="hidden" name="page" value="1">
             </form>
         </div>
 
         <!-- Students Table -->
         <div class="students-table-container">
             <div class="table-header">
-                <h2>Student Applications</h2>
-                <span class="results-count" id="resultsCount"><?php echo count($students); ?> Students</span>
+                <div>
+                    <h2>Student Applications</h2>
+                    <p style="margin:.2rem 0 0;font-size:.8rem;color:var(--gray-500);">
+                        Showing <?php echo $total === 0 ? 0 : (($page - 1) * $perPage + 1); ?>–<?php echo min($page * $perPage, $total); ?> of <?php echo $total; ?> students
+                    </p>
+                </div>
+                <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+                    <!-- Per-page selector -->
+                    <form method="GET" style="display:flex;align-items:center;gap:.4rem;">
+                        <?php foreach ($filters as $k => $v): ?>
+                        <?php if ($v !== ''): ?>
+                        <input type="hidden" name="<?php echo e($k); ?>" value="<?php echo e($v); ?>">
+                        <?php endif; ?>
+                        <?php endforeach; ?>
+                        <input type="hidden" name="page" value="1">
+                        <label style="font-size:.8rem;font-weight:600;color:var(--gray-600);white-space:nowrap;">Show</label>
+                        <select name="per_page" onchange="this.form.submit()"
+                                style="padding:.35rem .6rem;border:2px solid var(--gray-300);border-radius:var(--radius);font-size:.8125rem;cursor:pointer;">
+                            <?php foreach ([10, 25, 50, 100] as $opt): ?>
+                            <option value="<?php echo $opt; ?>" <?php echo $perPage === $opt ? 'selected' : ''; ?>><?php echo $opt; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <label style="font-size:.8rem;font-weight:600;color:var(--gray-600);white-space:nowrap;">per page</label>
+                    </form>
+                    <span class="results-count"><?php echo $total; ?> Total</span>
+                </div>
             </div>
             
             <div class="table-wrapper">
@@ -570,7 +698,9 @@ $years = array_reverse($years);
                         <tr data-student-id="<?php echo e($student['id']); ?>">
                             <td>
                                 <div class="student-info">
-                                    <img src="<?php echo e($student['passport_photo']); ?>" alt="Student Photo" class="student-avatar">
+                                    <div class="student-avatar-initial">
+                                        <?php echo strtoupper(substr($student['first_name'], 0, 1) . substr($student['last_name'], 0, 1)); ?>
+                                    </div>
                                     <div class="student-details">
                                         <h4><?php echo e($student['last_name']); ?>, <?php echo e($student['first_name']); ?> <?php echo e($student['middle_name']); ?></h4>
                                         <p><?php echo e($student['course_of_study'] ?: $student['department']); ?></p>
@@ -641,7 +771,52 @@ $years = array_reverse($years);
                     </tbody>
                 </table>
             </div>
-        </div>
+
+            <!-- ── Pagination bar ── -->
+            <?php if ($totalPages > 1 || $total > 10): ?>
+            <div class="pagination-bar">
+                <div class="pagination-info">
+                    Showing <?php echo $total === 0 ? 0 : (($page - 1) * $perPage + 1); ?>–<?php echo min($page * $perPage, $total); ?> of <?php echo $total; ?> students
+                </div>
+                <div class="pagination-controls">
+                    <!-- First -->
+                    <a href="<?php echo e(pageUrl(1)); ?>"
+                       class="pg-btn <?php echo $page <= 1 ? 'pg-disabled' : ''; ?>" title="First">«</a>
+                    <!-- Prev -->
+                    <a href="<?php echo e(pageUrl(max(1, $page - 1))); ?>"
+                       class="pg-btn <?php echo $page <= 1 ? 'pg-disabled' : ''; ?>" title="Previous">‹</a>
+
+                    <?php
+                    // Show window of page numbers around current page
+                    $window = 2;
+                    $start  = max(1, $page - $window);
+                    $end    = min($totalPages, $page + $window);
+                    if ($start > 1): ?>
+                        <a href="<?php echo e(pageUrl(1)); ?>" class="pg-btn">1</a>
+                        <?php if ($start > 2): ?><span class="pg-btn pg-disabled">…</span><?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php for ($p = $start; $p <= $end; $p++): ?>
+                    <a href="<?php echo e(pageUrl($p)); ?>"
+                       class="pg-btn <?php echo $p === $page ? 'pg-active' : ''; ?>"><?php echo $p; ?></a>
+                    <?php endfor; ?>
+
+                    <?php if ($end < $totalPages): ?>
+                        <?php if ($end < $totalPages - 1): ?><span class="pg-btn pg-disabled">…</span><?php endif; ?>
+                        <a href="<?php echo e(pageUrl($totalPages)); ?>" class="pg-btn"><?php echo $totalPages; ?></a>
+                    <?php endif; ?>
+
+                    <!-- Next -->
+                    <a href="<?php echo e(pageUrl(min($totalPages, $page + 1))); ?>"
+                       class="pg-btn <?php echo $page >= $totalPages ? 'pg-disabled' : ''; ?>" title="Next">›</a>
+                    <!-- Last -->
+                    <a href="<?php echo e(pageUrl($totalPages)); ?>"
+                       class="pg-btn <?php echo $page >= $totalPages ? 'pg-disabled' : ''; ?>" title="Last">»</a>
+                </div>
+            </div>
+            <?php endif; ?>
+
+        </div><!-- /students-table-container -->
     </div>
 
     <!-- Modals will be added via JavaScript -->

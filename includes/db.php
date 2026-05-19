@@ -105,6 +105,91 @@ function getStudents($programme = null) {
     return $stmt->fetchAll();
 }
 
+/**
+ * Paginated, filtered student list.
+ * Returns ['rows' => [...], 'total' => N]
+ */
+function getStudentsPaginated(array $filters, int $page, int $perPage, string $programme = null): array {
+    $db     = getDB();
+    $cols   = STUDENT_LIST_COLS;
+    $where  = [];
+    $params = [];
+
+    // Programme access control
+    if ($programme && $programme !== 'SuperAdmin') {
+        $where[]  = 'programme = ?';
+        $params[] = $programme;
+    }
+
+    // Filter: programme dropdown
+    if (!empty($filters['programme'])) {
+        $where[]  = 'programme = ?';
+        $params[] = $filters['programme'];
+    }
+
+    // Filter: status
+    if (!empty($filters['status'])) {
+        $where[]  = 'status = ?';
+        $params[] = $filters['status'];
+    }
+
+    // Filter: printed
+    if ($filters['printed'] !== '' && $filters['printed'] !== null) {
+        $where[]  = 'printed = ?';
+        $params[] = (int) $filters['printed'];
+    }
+
+    // Filter: year (extracted from reg_number)
+    if (!empty($filters['year'])) {
+        $where[]  = "reg_number LIKE ?";
+        $params[] = '%/' . $filters['year'] . '/%';
+    }
+
+    // Filter: faculty
+    if (!empty($filters['faculty'])) {
+        $where[]  = 'faculty = ?';
+        $params[] = $filters['faculty'];
+    }
+
+    // Filter: department
+    if (!empty($filters['department'])) {
+        $where[]  = 'department = ?';
+        $params[] = $filters['department'];
+    }
+
+    // Filter: search (name or reg number)
+    if (!empty($filters['search'])) {
+        $like     = '%' . $filters['search'] . '%';
+        $where[]  = '(first_name LIKE ? OR last_name LIKE ? OR middle_name LIKE ? OR reg_number LIKE ?)';
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+    }
+
+    $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+    // Total count
+    $countStmt = $db->prepare("SELECT COUNT(*) FROM students $whereSQL");
+    $countStmt->execute($params);
+    $total = (int) $countStmt->fetchColumn();
+
+    // Paginated rows
+    $offset = ($page - 1) * $perPage;
+    $rowStmt = $db->prepare("SELECT $cols FROM students $whereSQL ORDER BY created_at DESC LIMIT ? OFFSET ?");
+    // PDO needs int binding for LIMIT/OFFSET
+    $allParams = array_merge($params, [$perPage, $offset]);
+    foreach ($allParams as $i => $val) {
+        $rowStmt->bindValue($i + 1, $val, is_int($val) ? PDO::PARAM_INT : PDO::PARAM_STR);
+    }
+    $rowStmt->execute();
+
+    return [
+        'rows'  => $rowStmt->fetchAll(),
+        'total' => $total,
+    ];
+}
+
 function getStudentById($id) {
     $db = getDB();
     $stmt = $db->prepare("SELECT * FROM students WHERE id = ?");
