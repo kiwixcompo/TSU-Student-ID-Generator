@@ -48,11 +48,12 @@ function getDB() {
     return Database::getInstance()->getConnection();
 }
 
-// Columns safe for list queries — excludes the huge passport_photo BLOB
+// Columns safe for list queries — excludes the huge passport_photo BLOB, but includes a tiny boolean check has_photo
 define('STUDENT_LIST_COLS',
-    'id, programme, first_name, middle_name, last_name, reg_number,
+    "id, programme, first_name, middle_name, last_name, reg_number,
      blood_group, faculty, department, course_of_study,
-     created_at, status, admin_note, printed, printed_at'
+     created_at, status, admin_note, printed, printed_at,
+     (CASE WHEN passport_photo IS NOT NULL AND passport_photo != '' THEN 1 ELSE 0 END) as has_photo"
 );
 
 // Student Functions
@@ -111,7 +112,7 @@ function getStudents($programme = null) {
  */
 function getStudentsPaginated(array $filters, int $page, int $perPage, string $programme = null): array {
     $db     = getDB();
-    $cols   = STUDENT_LIST_COLS . ", passport_photo";
+    $cols   = STUDENT_LIST_COLS;
     $where  = [];
     $params = [];
 
@@ -281,7 +282,7 @@ function updateStudent($id, $data) {
 
 function searchStudents($query, $programme = null) {
     $db   = getDB();
-    $cols = STUDENT_LIST_COLS . ", passport_photo";
+    $cols = STUDENT_LIST_COLS;
     $like = '%' . $query . '%';
 
     if ($programme && $programme !== 'SuperAdmin') {
@@ -401,3 +402,69 @@ function verifyStudentPassword($reg_number, $password) {
     }
     return false;
 }
+
+/**
+ * Optimized dashboard statistics fetch.
+ * Returns ['total' => N, 'generated' => N, 'pending' => N]
+ */
+function getStudentStats(string $programme = null): array {
+    $db = getDB();
+    $where = '';
+    $params = [];
+    if ($programme && $programme !== 'SuperAdmin') {
+        $where = 'WHERE programme = ?';
+        $params[] = $programme;
+    }
+    
+    $stmt = $db->prepare("
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'id_generated' THEN 1 ELSE 0 END) as generated,
+            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending
+        FROM students
+        $where
+    ");
+    $stmt->execute($params);
+    $row = $stmt->fetch();
+    return [
+        'total'     => (int) ($row['total'] ?? 0),
+        'generated' => (int) ($row['generated'] ?? 0),
+        'pending'   => (int) ($row['pending'] ?? 0)
+    ];
+}
+
+/**
+ * Optimized registration years list compiler.
+ * Avoids loading full student rows or profiles.
+ */
+function getUniqueYears(string $programme = null): array {
+    $db = getDB();
+    $where = '';
+    $params = [];
+    if ($programme && $programme !== 'SuperAdmin') {
+        $where = 'WHERE programme = ?';
+        $params[] = $programme;
+    }
+    
+    // We only fetch the reg_number column which is indexed and small
+    $stmt = $db->prepare("SELECT reg_number FROM students $where");
+    $stmt->execute($params);
+    $regs = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    $years = [];
+    foreach ($regs as $reg) {
+        if (preg_match('/(19|20)\d{2}/', $reg, $matches)) {
+            $years[$matches[0]] = true;
+        } else {
+            $parts = explode('/', $reg);
+            $yr = isset($parts[2]) ? trim($parts[2]) : '';
+            if ($yr !== '') {
+                $years[$yr] = true;
+            }
+        }
+    }
+    $years = array_keys($years);
+    sort($years);
+    return array_reverse($years);
+}
+

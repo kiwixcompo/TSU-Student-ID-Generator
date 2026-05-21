@@ -37,15 +37,13 @@ $totalPages = max(1, (int) ceil($total / $perPage));
 if ($page > $totalPages) $page = $totalPages;
 
 // ── Stats (always full counts, unfiltered) ────────────────────────────────────
-$allStudents = getStudents($session['programme_managed']);
-$totalAll    = count($allStudents);
-$totalGen    = count(array_filter($allStudents, fn($s) => $s['status'] === 'id_generated'));
-$totalPend   = count(array_filter($allStudents, fn($s) => $s['status'] === 'pending'));
+$stats = getStudentStats($session['programme_managed']);
+$totalAll    = $stats['total'];
+$totalGen    = $stats['generated'];
+$totalPend   = $stats['pending'];
 
 // ── Years for filter dropdown ─────────────────────────────────────────────────
-$years = array_filter(array_unique(array_map(fn($s) => extractYearFromRegNumber($s['reg_number']), $allStudents)));
-sort($years);
-$years = array_reverse($years);
+$years = getUniqueYears($session['programme_managed']);
 
 // ── Build query string helper (preserves all params except page) ──────────────
 function pageUrl(int $p, array $extra = []): string {
@@ -699,8 +697,8 @@ function pageUrl(int $p, array $extra = []): string {
                         <tr data-student-id="<?php echo e($student['id']); ?>">
                             <td>
                                 <div class="student-info">
-                                    <?php if (!empty($student['passport_photo'])): ?>
-                                    <img src="<?php echo e($student['passport_photo']); ?>" class="student-avatar" alt="">
+                                    <?php if (!empty($student['has_photo'])): ?>
+                                    <img src="../avatar.php?id=<?php echo $student['id']; ?>" class="student-avatar" alt="">
                                     <?php else: ?>
                                     <div class="student-avatar-initial">
                                         <?php echo strtoupper(substr($student['first_name'], 0, 1) . substr($student['last_name'], 0, 1)); ?>

@@ -294,14 +294,14 @@ if (isPost() && post('action') === 'save' && $editId) {
             <?php
                 $missing = [];
                 if (empty($r['blood_group']))    $missing[] = 'blood group';
-                if (empty($r['passport_photo'])) $missing[] = 'photo';
+                if (empty($r['has_photo']))      $missing[] = 'photo';
                 if (empty($r['faculty']))        $missing[] = 'faculty';
                 if (empty($r['department']))     $missing[] = 'department';
             ?>
             <a href="edit-student.php?id=<?php echo $r['id']; ?>&q=<?php echo urlencode($searchQ); ?>"
                class="result-item">
-                <?php if (!empty($r['passport_photo'])): ?>
-                <img src="<?php echo e($r['passport_photo']); ?>" class="result-avatar" alt="">
+                <?php if (!empty($r['has_photo'])): ?>
+                <img src="../avatar.php?id=<?php echo $r['id']; ?>" class="result-avatar" alt="">
                 <?php else: ?>
                 <div class="result-avatar-placeholder"><?php echo strtoupper(substr($r['first_name'],0,1)); ?></div>
                 <?php endif; ?>

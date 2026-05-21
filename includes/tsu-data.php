@@ -17,6 +17,7 @@ function getTsuData(): array {
             return _getTsuDataStatic();
         }
 
+        // Query 1: Fetch all faculties
         $facRows = $db->query(
             "SELECT id, name FROM faculties ORDER BY sort_order, name"
         )->fetchAll();
@@ -25,33 +26,41 @@ function getTsuData(): array {
             return _getTsuDataStatic();
         }
 
-        $deptStmt = $db->prepare(
-            "SELECT id, name FROM departments WHERE faculty_id = ? ORDER BY sort_order, name"
-        );
-        $courseStmt = $db->prepare(
-            "SELECT name FROM courses WHERE department_id = ? ORDER BY sort_order, name"
-        );
+        // Query 2: Fetch all departments
+        $deptRows = $db->query(
+            "SELECT id, faculty_id, name FROM departments ORDER BY sort_order, name"
+        )->fetchAll();
 
+        // Query 3: Fetch all courses/programmes
+        $courseRows = $db->query(
+            "SELECT department_id, name FROM courses ORDER BY sort_order, name"
+        )->fetchAll();
+
+        // Group courses/programmes by department_id for O(1) mapping
+        $coursesByDept = [];
+        foreach ($courseRows as $course) {
+            $coursesByDept[$course['department_id']][] = $course['name'];
+        }
+
+        // Group departments by faculty_id for O(1) mapping
+        $deptsByFac = [];
+        foreach ($deptRows as $dept) {
+            $deptId = $dept['id'];
+            $deptsByFac[$dept['faculty_id']][] = [
+                'id'         => $deptId,
+                'name'       => $dept['name'],
+                'programmes' => $coursesByDept[$deptId] ?? [],
+            ];
+        }
+
+        // Assemble final hierarchal result
         $result = [];
         foreach ($facRows as $fac) {
-            $deptStmt->execute([$fac['id']]);
-            $depts = $deptStmt->fetchAll();
-
-            $deptArr = [];
-            foreach ($depts as $dept) {
-                $courseStmt->execute([$dept['id']]);
-                $courses = $courseStmt->fetchAll(PDO::FETCH_COLUMN);
-                $deptArr[] = [
-                    'id'         => $dept['id'],
-                    'name'       => $dept['name'],
-                    'programmes' => $courses,
-                ];
-            }
-
+            $facId = $fac['id'];
             $result[] = [
-                'id'          => $fac['id'],
+                'id'          => $facId,
                 'faculty'     => $fac['name'],
-                'departments' => $deptArr,
+                'departments' => $deptsByFac[$facId] ?? [],
             ];
         }
 

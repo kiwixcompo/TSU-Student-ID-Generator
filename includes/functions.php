@@ -79,8 +79,87 @@ function validateImage($file) {
     return $errors;
 }
 
-// Convert image to base64
+/**
+ * Resizes and compresses an uploaded image to a maximum bounding box using GD.
+ * Returns an array with ['data' => binaryString, 'mime' => mimeType] or falls back to original.
+ */
+function compressAndResizeImage($tmpPath, $maxWidth = 400, $maxHeight = 480, $quality = 80) {
+    list($width, $height, $type) = getimagesize($tmpPath);
+    
+    // Create image resource based on original type
+    switch ($type) {
+        case IMAGETYPE_JPEG:
+            $src = @imagecreatefromjpeg($tmpPath);
+            break;
+        case IMAGETYPE_PNG:
+            $src = @imagecreatefrompng($tmpPath);
+            break;
+        case IMAGETYPE_GIF:
+            $src = @imagecreatefromgif($tmpPath);
+            break;
+        default:
+            return false;
+    }
+    
+    if (!$src) {
+        return false;
+    }
+    
+    // Calculate new dimensions while maintaining aspect ratio
+    $ratio = min($maxWidth / $width, $maxHeight / $height);
+    if ($ratio < 1) {
+        $newWidth = (int)($width * $ratio);
+        $newHeight = (int)($height * $ratio);
+    } else {
+        $newWidth = $width;
+        $newHeight = $height;
+    }
+    
+    $dst = imagecreatetruecolor($newWidth, $newHeight);
+    if (!$dst) {
+        imagedestroy($src);
+        return false;
+    }
+    
+    // Handle PNG transparency gracefully
+    if ($type === IMAGETYPE_PNG) {
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
+        imagefilledrectangle($dst, 0, 0, $newWidth, $newHeight, $transparent);
+    } else {
+        // Fill white background for JPEG compression
+        $white = imagecolorallocate($dst, 255, 255, 255);
+        imagefilledrectangle($dst, 0, 0, $newWidth, $newHeight, $white);
+    }
+    
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+    
+    // Output image as compressed JPEG for maximum efficiency
+    ob_start();
+    imagejpeg($dst, null, $quality);
+    $compressedData = ob_get_clean();
+    
+    // Free resources
+    imagedestroy($src);
+    imagedestroy($dst);
+    
+    return [
+        'data' => $compressedData,
+        'mime' => 'image/jpeg'
+    ];
+}
+
+// Convert image to base64 (with built-in high-performance compression & resizing)
 function imageToBase64($file) {
+    if (function_exists('gd_info') && file_exists($file['tmp_name'])) {
+        $compressed = compressAndResizeImage($file['tmp_name']);
+        if ($compressed !== false) {
+            return 'data:' . $compressed['mime'] . ';base64,' . base64_encode($compressed['data']);
+        }
+    }
+    
+    // Fallback to original uncompressed file if GD is not present or compression failed
     $imageData = file_get_contents($file['tmp_name']);
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mime = finfo_file($finfo, $file['tmp_name']);
