@@ -13,9 +13,9 @@ function isValidEmail($email) {
     return filter_var($email, FILTER_VALIDATE_EMAIL);
 }
 
-// Validate registration number format (TSU/XX/YYYY/NNN)
+// Validate registration number format (Must not be empty)
 function isValidRegNumber($reg_number) {
-    return preg_match('/^TSU\/[A-Z]{2,}\/\d{4}\/\d+$/', $reg_number);
+    return !empty(trim($reg_number));
 }
 
 // Format date
@@ -89,8 +89,11 @@ function imageToBase64($file) {
     return 'data:' . $mime . ';base64,' . base64_encode($imageData);
 }
 
-// Extract year from registration number
+// Extract year from registration number robustly
 function extractYearFromRegNumber($reg_number) {
+    if (preg_match('/(19|20)\d{2}/', $reg_number, $matches)) {
+        return $matches[0];
+    }
     $parts = explode('/', $reg_number);
     return isset($parts[2]) ? $parts[2] : '';
 }

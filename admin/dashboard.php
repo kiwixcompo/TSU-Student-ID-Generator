@@ -43,7 +43,7 @@ $totalGen    = count(array_filter($allStudents, fn($s) => $s['status'] === 'id_g
 $totalPend   = count(array_filter($allStudents, fn($s) => $s['status'] === 'pending'));
 
 // ── Years for filter dropdown ─────────────────────────────────────────────────
-$years = array_unique(array_map(fn($s) => extractYearFromRegNumber($s['reg_number']), $allStudents));
+$years = array_filter(array_unique(array_map(fn($s) => extractYearFromRegNumber($s['reg_number']), $allStudents)));
 sort($years);
 $years = array_reverse($years);
 

@@ -27,7 +27,7 @@ if (isPost()) {
         }
         
         if (!isValidRegNumber($reg_number)) {
-            throw new Exception('Invalid registration number format. Use format: TSU/XX/YYYY/NNN');
+            throw new Exception('Registration number is required.');
         }
         
         if (!isset($_FILES['passport_photo']) || $_FILES['passport_photo']['error'] !== UPLOAD_ERR_OK) {

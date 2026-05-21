@@ -33,6 +33,10 @@ switch ($action) {
     case 'mark_printed':
         handleMarkPrinted();
         break;
+
+    case 'upload_photo':
+        handleUploadPhoto();
+        break;
     
     default:
         jsonResponse(['success' => false, 'error' => 'Invalid action'], 400);
@@ -115,6 +119,36 @@ function handleMarkPrinted() {
     try {
         markStudentPrinted($studentId, $printed);
         jsonResponse(['success' => true, 'printed' => $printed]);
+    } catch (Exception $e) {
+        jsonResponse(['success' => false, 'error' => $e->getMessage()]);
+    }
+}
+
+function handleUploadPhoto() {
+    $studentId = post('student_id');
+    
+    if (!$studentId) {
+        jsonResponse(['success' => false, 'error' => 'Student ID is required']);
+    }
+    
+    if (!isset($_FILES['passport_photo']) || $_FILES['passport_photo']['error'] !== UPLOAD_ERR_OK) {
+        jsonResponse(['success' => false, 'error' => 'No file uploaded or file upload error occurred.']);
+    }
+    
+    try {
+        $imgErrors = validateImage($_FILES['passport_photo']);
+        if (!empty($imgErrors)) {
+            jsonResponse(['success' => false, 'error' => implode(' ', $imgErrors)]);
+        }
+        
+        $passport_photo = imageToBase64($_FILES['passport_photo']);
+        updateStudent($studentId, ['passport_photo' => $passport_photo]);
+        
+        jsonResponse([
+            'success' => true, 
+            'message' => 'Passport photo uploaded successfully', 
+            'photo' => $passport_photo
+        ]);
     } catch (Exception $e) {
         jsonResponse(['success' => false, 'error' => $e->getMessage()]);
     }

@@ -179,6 +179,62 @@ if (isPost() && post('action') === 'save' && $editId) {
         .photo-upload-area p { margin: .25rem 0; font-size: .8125rem; color: var(--gray-600); }
         #photoPreviewImg { width: 100px; height: 120px; object-fit: cover; border-radius: .5rem; margin-bottom: .5rem; display: none; }
 
+        /* Premium Loader & Overlay */
+        .photo-container {
+            position: relative;
+            width: 120px;
+            height: 140px;
+            flex-shrink: 0;
+        }
+        .photo-loader {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(2px);
+            border-radius: .75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+            border: 3px solid var(--gray-200);
+        }
+        .photo-loader.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--gray-300);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 0.5rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .photo-loader span {
+            font-size: 0.65rem;
+            color: var(--gray-700);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        /* Slide notifications keyframes */
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(120%); opacity: 0; }
+        }
+
         .form-actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--gray-200); }
     </style>
 </head>
@@ -279,16 +335,22 @@ if (isPost() && post('action') === 'save' && $editId) {
                 <!-- Passport Photo -->
                 <div class="section-title">Passport Photo</div>
                 <div class="photo-section">
-                    <?php if (!empty($student['passport_photo'])): ?>
-                    <img src="<?php echo e($student['passport_photo']); ?>" class="current-photo" id="currentPhoto" alt="Current photo">
-                    <?php else: ?>
-                    <div class="photo-placeholder-box" id="currentPhoto">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                        No photo
+                    <div class="photo-container">
+                        <div class="photo-loader" id="photoLoader">
+                            <div class="spinner"></div>
+                            <span>Uploading...</span>
+                        </div>
+                        <?php if (!empty($student['passport_photo'])): ?>
+                        <img src="<?php echo e($student['passport_photo']); ?>" class="current-photo" id="currentPhoto" alt="Current photo">
+                        <?php else: ?>
+                        <div class="photo-placeholder-box" id="currentPhoto">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            No photo
+                        </div>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
 
                     <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
                         <img id="photoPreviewImg" src="" alt="Preview">
@@ -524,24 +586,83 @@ function stripDegreePrefix(prog) {
         .trim();
 }
 
-// ── Photo preview ──
+// ── Photo preview and AJAX Upload ──
 const photoInput = document.getElementById('photoInput');
 const previewImg = document.getElementById('photoPreviewImg');
-const currentPhoto = document.getElementById('currentPhoto');
 
 if (photoInput) {
     photoInput.addEventListener('change', function () {
         const file = this.files[0];
         if (!file) return;
-        if (file.size > 2 * 1024 * 1024) { alert('Image must be less than 2MB'); this.value = ''; return; }
-        const reader = new FileReader();
-        reader.onload = e => {
-            previewImg.src = e.target.result;
-            previewImg.style.display = 'block';
-            if (currentPhoto) currentPhoto.style.opacity = '.4';
-        };
-        reader.readAsDataURL(file);
+        if (file.size > 2 * 1024 * 1024) { 
+            showNotification('Image must be less than 2MB', 'error'); 
+            this.value = ''; 
+            return; 
+        }
+        
+        // Show loader overlay
+        const loader = document.getElementById('photoLoader');
+        if (loader) loader.classList.add('active');
+        
+        // Prepare FormData
+        const formData = new FormData();
+        formData.append('action', 'upload_photo');
+        formData.append('student_id', '<?php echo $student['id'] ?? 0; ?>');
+        formData.append('passport_photo', file);
+        
+        // Upload immediately via fetch
+        fetch('ajax-handlers.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (loader) loader.classList.remove('active');
+            if (result.success) {
+                showNotification('Passport photo uploaded successfully!', 'success');
+                
+                // Dynamically update or replace currentPhoto element
+                let currentPhotoEl = document.getElementById('currentPhoto');
+                if (currentPhotoEl) {
+                    if (currentPhotoEl.tagName === 'IMG') {
+                        currentPhotoEl.src = result.photo;
+                    } else {
+                        // It is a placeholder div, replace it with a premium img element
+                        const newImg = document.createElement('img');
+                        newImg.src = result.photo;
+                        newImg.className = 'current-photo';
+                        newImg.id = 'currentPhoto';
+                        newImg.alt = 'Current photo';
+                        currentPhotoEl.parentNode.replaceChild(newImg, currentPhotoEl);
+                    }
+                }
+                
+                // Clear inputs
+                photoInput.value = '';
+                if (previewImg) previewImg.style.display = 'none';
+            } else {
+                showNotification(result.error || 'Failed to upload photo', 'error');
+            }
+        })
+        .catch(error => {
+            if (loader) loader.classList.remove('active');
+            showNotification('An error occurred during photo upload.', 'error');
+        });
     });
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type}`;
+    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideInRight 0.3s ease;';
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 </script>
 </body>
