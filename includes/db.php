@@ -281,7 +281,7 @@ function updateStudent($id, $data) {
 
 function searchStudents($query, $programme = null) {
     $db   = getDB();
-    $cols = STUDENT_LIST_COLS;
+    $cols = STUDENT_LIST_COLS . ", passport_photo";
     $like = '%' . $query . '%';
 
     if ($programme && $programme !== 'SuperAdmin') {
