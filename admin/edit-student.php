@@ -517,7 +517,20 @@ if (facSel) {
             if (deptSel.value) populateCourses(facSel.value, deptSel.value, cosSel.value);
         });
     }
+
+    // Pre-populate selections with saved data on load
+    document.addEventListener('DOMContentLoaded', function () {
+        const initialFaculty = <?php echo json_encode($student['faculty'] ?? ''); ?>;
+        const initialDept    = <?php echo json_encode($student['department'] ?? ''); ?>;
+        const initialCos     = <?php echo json_encode($student['course_of_study'] ?? ''); ?>;
+
+        if (initialFaculty) {
+            facSel.value = initialFaculty;
+            populateDepts(initialFaculty, initialDept, initialCos);
+        }
+    });
 }
+
 
 function populateDepts(facName, selDept, selCos) {
     deptSel.innerHTML = '<option value="">— Select Department —</option>';
