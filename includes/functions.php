@@ -106,10 +106,16 @@ function jsonResponse($data, $statusCode = 200) {
     exit;
 }
 
+// Decode escaped output
+function d($string) {
+    return htmlspecialchars_decode($string ?? '', ENT_QUOTES);
+}
+
 // Escape output
 function e($string) {
-    return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars(d($string), ENT_QUOTES, 'UTF-8');
 }
+
 
 // Check if request is POST
 function isPost() {

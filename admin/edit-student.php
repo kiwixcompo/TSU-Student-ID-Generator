@@ -424,7 +424,7 @@ if (isPost() && post('action') === 'save' && $editId) {
                             <option value="">— Select Faculty —</option>
                             <?php foreach ($tsuData as $fac): ?>
                             <option value="<?php echo e($fac['faculty']); ?>"
-                                <?php echo ($student['faculty']??'')===$fac['faculty']?'selected':''; ?>>
+                                <?php echo d($student['faculty']??'')===$fac['faculty']?'selected':''; ?>>
                                 <?php echo e($fac['faculty']); ?>
                             </option>
                             <?php endforeach; ?>
@@ -436,11 +436,11 @@ if (isPost() && post('action') === 'save' && $editId) {
                             <option value="">— Select Department —</option>
                             <?php
                             // Pre-populate departments for current faculty
-                            $curFac = $student['faculty'] ?? '';
+                            $curFac = d($student['faculty'] ?? '');
                             foreach ($tsuData as $fac) {
                                 if ($fac['faculty'] === $curFac) {
                                     foreach ($fac['departments'] as $dept) {
-                                        $sel = ($student['department']??'')===$dept['name']?'selected':'';
+                                        $sel = d($student['department']??'')===$dept['name']?'selected':'';
                                         echo '<option value="'.e($dept['name']).'" '.$sel.'>'.e($dept['name']).'</option>';
                                     }
                                     break;
@@ -456,13 +456,13 @@ if (isPost() && post('action') === 'save' && $editId) {
                     <select name="course_of_study" id="editCourse" class="form-control">
                         <option value="">— Select Course —</option>
                         <?php
-                        $curDept = $student['department'] ?? '';
+                        $curDept = d($student['department'] ?? '');
                         foreach ($tsuData as $fac) {
                             if ($fac['faculty'] === $curFac) {
                                 foreach ($fac['departments'] as $dept) {
                                     if ($dept['name'] === $curDept) {
                                         foreach ($dept['programmes'] as $prog) {
-                                            $sel = ($student['course_of_study']??'')===$prog?'selected':'';
+                                            $sel = d($student['course_of_study']??'')===$prog?'selected':'';
                                             echo '<option value="'.e($prog).'" '.$sel.'>'.e($prog).'</option>';
                                         }
                                         break 2;
@@ -472,6 +472,7 @@ if (isPost() && post('action') === 'save' && $editId) {
                         }
                         ?>
                     </select>
+
                 </div>
 
                 <!-- Admin Note -->
@@ -520,9 +521,10 @@ if (facSel) {
 
     // Pre-populate selections with saved data on load
     document.addEventListener('DOMContentLoaded', function () {
-        const initialFaculty = <?php echo json_encode($student['faculty'] ?? ''); ?>;
-        const initialDept    = <?php echo json_encode($student['department'] ?? ''); ?>;
-        const initialCos     = <?php echo json_encode($student['course_of_study'] ?? ''); ?>;
+        const initialFaculty = <?php echo json_encode(d($student['faculty'] ?? '')); ?>;
+        const initialDept    = <?php echo json_encode(d($student['department'] ?? '')); ?>;
+        const initialCos     = <?php echo json_encode(d($student['course_of_study'] ?? '')); ?>;
+
 
         if (initialFaculty) {
             facSel.value = initialFaculty;

@@ -591,12 +591,13 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
     // ── QR Code ──
     new QRCode(document.getElementById('qrcode'), {
         text: <?php echo json_encode(
-            "Name: {$student['last_name']}, {$student['first_name']} {$student['middle_name']}\n" .
-            "Reg No: {$student['reg_number']}\n" .
-            "Faculty: {$student['faculty']}\n" .
-            "Dept: {$student['department']}\n" .
-            "Verify: {$verificationUrl}"
+            "Name: " . d($student['last_name'] ?? '') . ", " . d($student['first_name'] ?? '') . " " . d($student['middle_name'] ?? '') . "\n" .
+            "Reg No: " . d($student['reg_number'] ?? '') . "\n" .
+            "Faculty: " . d($student['faculty'] ?? '') . "\n" .
+            "Dept: " . d($student['department'] ?? '') . "\n" .
+            "Verify: " . $verificationUrl
         ); ?>,
+
         width: 190,
         height: 190,
         colorDark: '#14532d',
