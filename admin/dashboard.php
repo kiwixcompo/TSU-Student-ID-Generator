@@ -294,11 +294,12 @@ function pageUrl(int $p, array $extra = []): string {
         }
         
         .student-avatar {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: var(--radius-lg);
             object-fit: cover;
             border: 2px solid var(--gray-200);
+            flex-shrink: 0;
         }
 
         .student-avatar-initial {
@@ -698,9 +699,13 @@ function pageUrl(int $p, array $extra = []): string {
                         <tr data-student-id="<?php echo e($student['id']); ?>">
                             <td>
                                 <div class="student-info">
+                                    <?php if (!empty($student['passport_photo'])): ?>
+                                    <img src="<?php echo e($student['passport_photo']); ?>" class="student-avatar" alt="">
+                                    <?php else: ?>
                                     <div class="student-avatar-initial">
                                         <?php echo strtoupper(substr($student['first_name'], 0, 1) . substr($student['last_name'], 0, 1)); ?>
                                     </div>
+                                    <?php endif; ?>
                                     <div class="student-details">
                                         <h4><?php echo e($student['last_name']); ?>, <?php echo e($student['first_name']); ?> <?php echo e($student['middle_name']); ?></h4>
                                         <p><?php echo e($student['course_of_study'] ?: $student['department']); ?></p>

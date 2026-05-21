@@ -111,7 +111,7 @@ function getStudents($programme = null) {
  */
 function getStudentsPaginated(array $filters, int $page, int $perPage, string $programme = null): array {
     $db     = getDB();
-    $cols   = STUDENT_LIST_COLS;
+    $cols   = STUDENT_LIST_COLS . ", passport_photo";
     $where  = [];
     $params = [];
 
