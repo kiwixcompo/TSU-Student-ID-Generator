@@ -253,7 +253,13 @@ $verificationUrl = baseUrl('verify.php?reg=' . urlencode($student['reg_number'])
         <div class="profile-card">
             <div class="profile-header">
                 <div class="profile-content">
-                    <img src="<?php echo e($student['passport_photo']); ?>" alt="Student Photo" class="profile-avatar">
+                    <?php if (!empty($student['has_photo'])): ?>
+                        <img src="../avatar.php?id=<?php echo $student['id']; ?>" alt="Student Photo" class="profile-avatar">
+                    <?php else: ?>
+                        <div class="profile-avatar" style="background: var(--gray-200); color: var(--gray-600); display: flex; align-items: center; justify-content: center; font-size: 2.25rem; font-weight: 700;">
+                            <?php echo strtoupper(substr($student['first_name'], 0, 1)); ?>
+                        </div>
+                    <?php endif; ?>
                     <div class="profile-info">
                         <h2><?php echo e($student['last_name']); ?>, <?php echo e($student['first_name']); ?> <?php echo e($student['middle_name']); ?></h2>
                         <p><strong>Reg Number:</strong> <?php echo e($student['reg_number']); ?></p>

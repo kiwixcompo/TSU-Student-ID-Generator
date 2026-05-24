@@ -56,6 +56,14 @@ define('STUDENT_LIST_COLS',
      (CASE WHEN passport_photo IS NOT NULL AND passport_photo != '' THEN 1 ELSE 0 END) as has_photo"
 );
 
+// Columns safe for profile queries (includes password) — excludes the huge passport_photo BLOB, but includes a tiny boolean check has_photo
+define('STUDENT_PROFILE_COLS',
+    "id, programme, first_name, middle_name, last_name, reg_number,
+     password, blood_group, faculty, department, course_of_study,
+     created_at, status, admin_note, printed, printed_at,
+     (CASE WHEN passport_photo IS NOT NULL AND passport_photo != '' THEN 1 ELSE 0 END) as has_photo"
+);
+
 // Student Functions
 function registerStudent($data) {
     $db = getDB();
@@ -193,14 +201,16 @@ function getStudentsPaginated(array $filters, int $page, int $perPage, string $p
 
 function getStudentById($id) {
     $db = getDB();
-    $stmt = $db->prepare("SELECT * FROM students WHERE id = ?");
+    $cols = STUDENT_PROFILE_COLS;
+    $stmt = $db->prepare("SELECT $cols FROM students WHERE id = ?");
     $stmt->execute([$id]);
     return $stmt->fetch();
 }
 
 function getStudentByRegNumber($reg_number) {
     $db = getDB();
-    $stmt = $db->prepare("SELECT * FROM students WHERE reg_number = ?");
+    $cols = STUDENT_PROFILE_COLS;
+    $stmt = $db->prepare("SELECT $cols FROM students WHERE reg_number = ?");
     $stmt->execute([$reg_number]);
     return $stmt->fetch();
 }

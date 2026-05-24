@@ -196,8 +196,8 @@ if ($reg_number) {
 
                     <!-- Photo -->
                     <div class="profile-photo-wrap">
-                        <?php if (!empty($student['passport_photo'])): ?>
-                            <img src="<?php echo e($student['passport_photo']); ?>"
+                        <?php if (!empty($student['has_photo'])): ?>
+                            <img src="avatar.php?id=<?php echo $student['id']; ?>"
                                  class="profile-photo" alt="Student Photo"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                             <div class="photo-placeholder" style="display:none;">

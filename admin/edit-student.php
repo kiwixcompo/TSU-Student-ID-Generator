@@ -340,8 +340,8 @@ if (isPost() && post('action') === 'save' && $editId) {
                             <div class="spinner"></div>
                             <span>Uploading...</span>
                         </div>
-                        <?php if (!empty($student['passport_photo'])): ?>
-                        <img src="<?php echo e($student['passport_photo']); ?>" class="current-photo" id="currentPhoto" alt="Current photo">
+                        <?php if (!empty($student['has_photo'])): ?>
+                        <img src="../avatar.php?id=<?php echo $student['id']; ?>" class="current-photo" id="currentPhoto" alt="Current photo">
                         <?php else: ?>
                         <div class="photo-placeholder-box" id="currentPhoto">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
