@@ -301,7 +301,7 @@ if (isPost() && post('action') === 'save' && $editId) {
             <a href="edit-student.php?id=<?php echo $r['id']; ?>&q=<?php echo urlencode($searchQ); ?>"
                class="result-item">
                 <?php if (!empty($r['has_photo'])): ?>
-                <img src="../avatar.php?id=<?php echo $r['id']; ?>" class="result-avatar" alt="">
+                <img src="../avatar.php?id=<?php echo $r['id']; ?>&t=<?php echo time(); ?>" class="result-avatar" alt="">
                 <?php else: ?>
                 <div class="result-avatar-placeholder"><?php echo strtoupper(substr($r['first_name'],0,1)); ?></div>
                 <?php endif; ?>
@@ -341,7 +341,7 @@ if (isPost() && post('action') === 'save' && $editId) {
                             <span>Uploading...</span>
                         </div>
                         <?php if (!empty($student['has_photo'])): ?>
-                        <img src="../avatar.php?id=<?php echo $student['id']; ?>" class="current-photo" id="currentPhoto" alt="Current photo">
+                        <img src="../avatar.php?id=<?php echo $student['id']; ?>&t=<?php echo time(); ?>" class="current-photo" id="currentPhoto" alt="Current photo">
                         <?php else: ?>
                         <div class="photo-placeholder-box" id="currentPhoto">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">

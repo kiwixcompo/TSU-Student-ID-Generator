@@ -519,7 +519,7 @@ $watermarkColor = $isSandwich ? 'rgba(148, 111, 70, 0.05)' : 'rgba(22, 101, 52, 
                     <!-- Photo -->
                     <div class="photo-section">
                         <?php if (!empty($student['has_photo'])): ?>
-                            <img src="../avatar.php?id=<?php echo $student['id']; ?>"
+                            <img src="../avatar.php?id=<?php echo $student['id']; ?>&t=<?php echo time(); ?>"
                                  class="profile-photo" alt="Student Photo"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                             <div class="photo-placeholder" style="display:none;">

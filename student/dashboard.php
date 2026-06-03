@@ -254,7 +254,7 @@ $verificationUrl = baseUrl('verify.php?reg=' . urlencode($student['reg_number'])
             <div class="profile-header">
                 <div class="profile-content">
                     <?php if (!empty($student['has_photo'])): ?>
-                        <img src="../avatar.php?id=<?php echo $student['id']; ?>" alt="Student Photo" class="profile-avatar">
+                        <img src="../avatar.php?id=<?php echo $student['id']; ?>&t=<?php echo time(); ?>" alt="Student Photo" class="profile-avatar">
                     <?php else: ?>
                         <div class="profile-avatar" style="background: var(--gray-200); color: var(--gray-600); display: flex; align-items: center; justify-content: center; font-size: 2.25rem; font-weight: 700;">
                             <?php echo strtoupper(substr($student['first_name'], 0, 1)); ?>

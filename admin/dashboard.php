@@ -704,7 +704,7 @@ function pageUrl(int $p, array $extra = []): string {
                             <td>
                                 <div class="student-info">
                                     <?php if (!empty($student['has_photo'])): ?>
-                                    <img src="../avatar.php?id=<?php echo $student['id']; ?>" class="student-avatar" alt="">
+                                    <img src="../avatar.php?id=<?php echo $student['id']; ?>&t=<?php echo time(); ?>" class="student-avatar" alt="">
                                     <?php else: ?>
                                     <div class="student-avatar-initial">
                                         <?php echo strtoupper(substr($student['first_name'], 0, 1) . substr($student['last_name'], 0, 1)); ?>

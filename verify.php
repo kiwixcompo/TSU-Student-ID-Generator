@@ -208,7 +208,7 @@ $darkPrimaryColor = $isSandwich ? '#735431' : '#14532d';
                     <!-- Photo -->
                     <div class="profile-photo-wrap">
                         <?php if (!empty($student['has_photo'])): ?>
-                            <img src="avatar.php?id=<?php echo $student['id']; ?>"
+                            <img src="avatar.php?id=<?php echo $student['id']; ?>&t=<?php echo time(); ?>"
                                  class="profile-photo" alt="Student Photo"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                             <div class="photo-placeholder" style="display:none;">

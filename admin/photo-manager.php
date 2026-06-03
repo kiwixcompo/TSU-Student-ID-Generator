@@ -444,7 +444,7 @@ $students = $stmt->fetchAll();
                 'last_name' => $s['last_name'],
                 'reg_number' => $s['reg_number'],
                 'programme' => $s['programme'],
-                'passport_photo' => '../avatar.php?id=' . $s['id'] // Asynchronous image server endpoint
+                'passport_photo' => '../avatar.php?id=' . $s['id'] . '&t=' . time() // Asynchronous image server endpoint with cache-buster
             ];
         }, $students)); ?>;
 
