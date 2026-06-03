@@ -10,9 +10,18 @@ requireAdminAuth();
 $session = getAdminSession();
 $programmeManaged = $session['programme_managed'];
 
-// Fetch all students (filtered by admin access)
+// Fetch parameters
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$perPage = 24;
+$offset = ($page - 1) * $perPage;
+
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter = isset($_GET['filter']) ? trim($_GET['filter']) : 'landscape';
+if (!in_array($filter, ['landscape', 'portrait', 'all'])) {
+    $filter = 'landscape';
+}
+
 $db = getDB();
-$cols = STUDENT_LIST_COLS;
 $where = "WHERE passport_photo IS NOT NULL AND passport_photo != ''";
 $params = [];
 
@@ -21,11 +30,40 @@ if ($programmeManaged && $programmeManaged !== 'SuperAdmin') {
     $params[] = $programmeManaged;
 }
 
-$stmt = $db->prepare("SELECT id, programme, first_name, middle_name, last_name, reg_number, passport_photo FROM students $where ORDER BY created_at DESC");
-$stmt->execute($params);
-$students = $stmt->fetchAll();
+if ($search !== '') {
+    $where .= " AND (first_name LIKE ? OR last_name LIKE ? OR middle_name LIKE ? OR reg_number LIKE ?)";
+    $like = "%$search%";
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+}
 
-// We will parse the photos inside JavaScript or here to determine width/height and filter
+if ($filter === 'landscape') {
+    $where .= " AND photo_orientation = 'landscape'";
+} elseif ($filter === 'portrait') {
+    $where .= " AND photo_orientation = 'portrait'";
+}
+
+// Get total count
+$countStmt = $db->prepare("SELECT COUNT(*) FROM students $where");
+$countStmt->execute($params);
+$totalRows = (int)$countStmt->fetchColumn();
+$totalPages = ceil($totalRows / $perPage);
+
+if ($page > $totalPages && $totalPages > 0) {
+    $page = $totalPages;
+    $offset = ($page - 1) * $perPage;
+}
+
+// Memory-optimized query: excluded passport_photo column, paginated
+$stmt = $db->prepare("SELECT id, programme, first_name, middle_name, last_name, reg_number FROM students $where ORDER BY created_at DESC LIMIT ? OFFSET ?");
+$allParams = array_merge($params, [$perPage, $offset]);
+foreach ($allParams as $i => $val) {
+    $stmt->bindValue($i + 1, $val, is_int($val) ? PDO::PARAM_INT : PDO::PARAM_STR);
+}
+$stmt->execute();
+$students = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -108,7 +146,10 @@ $students = $stmt->fetchAll();
             background: white;
             color: var(--gray-700);
             cursor: pointer;
+            text-decoration: none;
             transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
         }
 
         .filter-btn.active {
@@ -121,6 +162,7 @@ $students = $stmt->fetchAll();
         .filter-btn:hover:not(.active) {
             background: var(--gray-50);
             border-color: var(--gray-400);
+            color: var(--gray-900);
         }
 
         /* Photo Grid */
@@ -309,6 +351,31 @@ $students = $stmt->fetchAll();
             color: var(--gray-400);
             margin-bottom: 1rem;
         }
+
+        .pagination-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-sm);
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .pagination-info {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 0.35rem;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -317,7 +384,7 @@ $students = $stmt->fetchAll();
         <div class="header-bar">
             <div class="header-title">
                 <h1>Photo Orientation Manager</h1>
-                <p>Detect potentially flipped landscape passport photos and rotate them upright.</p>
+                <p>Detect potentially flipped landscape passport photos and rotate them upright. (Showing <?php echo count($students); ?> of <?php echo $totalRows; ?> photos)</p>
             </div>
             <a href="dashboard.php" class="back-link">
                 <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
@@ -327,20 +394,48 @@ $students = $stmt->fetchAll();
 
         <!-- Filter controls -->
         <div class="filter-section">
-            <span style="font-weight: 700; font-size: 0.875rem; color: var(--gray-700);">Filter Orientations:</span>
-            <button class="filter-btn active" id="btnFilterLandscape">Flipped Candidates (Landscape)</button>
-            <button class="filter-btn" id="btnFilterAll">All Photos</button>
-            <button class="filter-btn" id="btnFilterPortrait">Portrait Photos</button>
+            <span style="font-weight: 700; font-size: 0.875rem; color: var(--gray-700);">Filter:</span>
+            <a href="?filter=landscape&search=<?php echo urlencode($search); ?>" class="filter-btn <?php echo $filter === 'landscape' ? 'active' : ''; ?>">Flipped Candidates (Landscape)</a>
+            <a href="?filter=all&search=<?php echo urlencode($search); ?>" class="filter-btn <?php echo $filter === 'all' ? 'active' : ''; ?>">All Photos</a>
+            <a href="?filter=portrait&search=<?php echo urlencode($search); ?>" class="filter-btn <?php echo $filter === 'portrait' ? 'active' : ''; ?>">Portrait Photos</a>
+            
+            <!-- Search Form -->
+            <form method="GET" style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <input type="hidden" name="filter" value="<?php echo e($filter); ?>">
+                <input type="text" name="search" placeholder="Search by name/reg..." value="<?php echo e($search); ?>" style="padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 0.875rem; min-width: 200px;">
+                <button type="submit" class="filter-btn active" style="border: none; cursor: pointer;">Search</button>
+                <?php if ($search !== ''): ?>
+                    <a href="?filter=<?php echo e($filter); ?>" class="filter-btn">Clear</a>
+                <?php endif; ?>
+            </form>
         </div>
 
         <!-- Cards grid -->
         <div class="photo-grid" id="photoGrid">
             <!-- Rendered by JS -->
         </div>
+
+        <!-- Pagination -->
+        <?php if ($totalPages > 1): ?>
+        <div class="pagination-bar">
+            <div class="pagination-info">
+                Showing <?php echo $totalRows === 0 ? 0 : (($page - 1) * $perPage + 1); ?>–<?php echo min($page * $perPage, $totalRows); ?> of <?php echo $totalRows; ?> photos
+            </div>
+            <div class="pagination-controls">
+                <a href="?page=1&filter=<?php echo urlencode($filter); ?>&search=<?php echo urlencode($search); ?>" class="filter-btn <?php echo $page <= 1 ? 'active' : ''; ?>" style="<?php echo $page <= 1 ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">&laquo; First</a>
+                <a href="?page=<?php echo max(1, $page - 1); ?>&filter=<?php echo urlencode($filter); ?>&search=<?php echo urlencode($search); ?>" class="filter-btn" style="<?php echo $page <= 1 ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">&lsaquo; Prev</a>
+                
+                <span style="padding: 0.5rem 1rem; font-weight: 700; font-size: 0.875rem;">Page <?php echo $page; ?> of <?php echo $totalPages; ?></span>
+                
+                <a href="?page=<?php echo min($totalPages, $page + 1); ?>&filter=<?php echo urlencode($filter); ?>&search=<?php echo urlencode($search); ?>" class="filter-btn" style="<?php echo $page >= $totalPages ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">Next &rsaquo;</a>
+                <a href="?page=<?php echo $totalPages; ?>&filter=<?php echo urlencode($filter); ?>&search=<?php echo urlencode($search); ?>" class="filter-btn <?php echo $page >= $totalPages ? 'active' : ''; ?>" style="<?php echo $page >= $totalPages ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">Last &raquo;</a>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <script>
-        // Inject student array from PHP securely
+        // Inject student array from PHP securely without photo blobs
         const students = <?php echo json_encode(array_map(function($s) {
             return [
                 'id' => (int)$s['id'],
@@ -349,20 +444,20 @@ $students = $stmt->fetchAll();
                 'last_name' => $s['last_name'],
                 'reg_number' => $s['reg_number'],
                 'programme' => $s['programme'],
-                'passport_photo' => $s['passport_photo']
+                'passport_photo' => '../avatar.php?id=' . $s['id'] // Asynchronous image server endpoint
             ];
         }, $students)); ?>;
 
         const photoGrid = document.getElementById('photoGrid');
-        const btnFilterLandscape = document.getElementById('btnFilterLandscape');
-        const btnFilterAll = document.getElementById('btnFilterAll');
-        const btnFilterPortrait = document.getElementById('btnFilterPortrait');
-
-        let activeFilter = 'landscape'; // 'landscape', 'all', 'portrait'
+        const activeFilter = <?php echo json_encode($filter); ?>;
         let parsedStudents = [];
 
-        // Analyze and cache image dimensions
+        // Analyze and cache image dimensions asynchronously
         async function analyzeImages() {
+            if (students.length === 0) {
+                renderGrid();
+                return;
+            }
             const promises = students.map(student => {
                 return new Promise((resolve) => {
                     const img = new Image();
@@ -400,6 +495,8 @@ $students = $stmt->fetchAll();
             photoGrid.innerHTML = '';
             
             let filtered = parsedStudents;
+            // Note: DB already filtered by activeFilter in SQL query.
+            // Client-side filtering here acts as a double check or updates views dynamically after rotation.
             if (activeFilter === 'landscape') {
                 filtered = parsedStudents.filter(s => s.orientation === 'landscape');
             } else if (activeFilter === 'portrait') {
@@ -413,7 +510,7 @@ $students = $stmt->fetchAll();
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                         <h3 style="font-size: 1.15rem; color: var(--gray-800); font-weight: 700; margin-bottom: 0.25rem;">No Photos Found</h3>
-                        <p style="color: var(--gray-500); font-size: 0.875rem; margin: 0;">No passport photos match the selected orientation filter.</p>
+                        <p style="color: var(--gray-500); font-size: 0.875rem; margin: 0;">No passport photos match the selected filter on this page.</p>
                     </div>
                 `;
                 return;
@@ -470,15 +567,15 @@ $students = $stmt->fetchAll();
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Update cache/student object
-                    const newPhoto = data.photo;
+                    // Update cache/student object with cache-buster timestamp
+                    const newPhotoUrl = '../avatar.php?id=' + studentId + '&t=' + new Date().getTime();
                     
                     // Reload the image in memory to re-calculate dimensions
                     const tempImg = new Image();
                     tempImg.onload = function() {
                         const studentIdx = parsedStudents.findIndex(s => s.id === studentId);
                         if (studentIdx !== -1) {
-                            parsedStudents[studentIdx].passport_photo = newPhoto;
+                            parsedStudents[studentIdx].passport_photo = newPhotoUrl;
                             parsedStudents[studentIdx].width = this.width;
                             parsedStudents[studentIdx].height = this.height;
                             parsedStudents[studentIdx].orientation = (this.width > this.height) ? 'landscape' : ((this.width < this.height) ? 'portrait' : 'square');
@@ -487,7 +584,7 @@ $students = $stmt->fetchAll();
                         // Re-render
                         renderGrid();
                     };
-                    tempImg.src = newPhoto;
+                    tempImg.src = newPhotoUrl;
                 } else {
                     alert('Error: ' + (data.error || 'Failed to rotate image'));
                     previewBox.classList.remove('loading');
@@ -498,28 +595,6 @@ $students = $stmt->fetchAll();
                 previewBox.classList.remove('loading');
             }
         }
-
-        // Filter button click events
-        btnFilterLandscape.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btnFilterLandscape.classList.add('active');
-            activeFilter = 'landscape';
-            renderGrid();
-        });
-
-        btnFilterAll.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btnFilterAll.classList.add('active');
-            activeFilter = 'all';
-            renderGrid();
-        });
-
-        btnFilterPortrait.addEventListener('click', () => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btnFilterPortrait.classList.add('active');
-            activeFilter = 'portrait';
-            renderGrid();
-        });
 
         // Initialize
         analyzeImages();

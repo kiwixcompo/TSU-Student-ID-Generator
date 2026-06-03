@@ -4,6 +4,7 @@
  */
 
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/functions.php';
 
 class Database {
     private static $instance = null;
@@ -78,11 +79,17 @@ function registerStudent($data) {
     // Hash password (default to reg_number)
     $password = password_hash($data['reg_number'], PASSWORD_DEFAULT);
     
+    // Calculate photo orientation
+    $photoOrientation = 'unknown';
+    if (!empty($data['passport_photo'])) {
+        $photoOrientation = getBase64ImageOrientation($data['passport_photo']);
+    }
+    
     $stmt = $db->prepare("
         INSERT INTO students (
             programme, first_name, middle_name, last_name, reg_number, 
-            password, blood_group, passport_photo, faculty, department, course_of_study
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            password, blood_group, passport_photo, photo_orientation, faculty, department, course_of_study
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     
     return $stmt->execute([
@@ -94,6 +101,7 @@ function registerStudent($data) {
         $password,
         $data['blood_group'],
         $data['passport_photo'],
+        $photoOrientation,
         $data['faculty'],
         $data['department'],
         $data['course_of_study'] ?? null
@@ -280,6 +288,9 @@ function updateStudent($id, $data) {
     if (!empty($data['passport_photo'])) {
         $fields[] = "passport_photo = ?";
         $values[] = $data['passport_photo'];
+        
+        $fields[] = "photo_orientation = ?";
+        $values[] = getBase64ImageOrientation($data['passport_photo']);
     }
 
     if (empty($fields)) return false;
@@ -538,9 +549,10 @@ function rotateStudentPhoto($studentId, $direction) {
     imagedestroy($rotated);
     
     $newPhoto = 'data:' . $mime . ';base64,' . base64_encode($outputData);
+    $newOrientation = getBase64ImageOrientation($newPhoto);
     
-    $stmtUpdate = $db->prepare("UPDATE students SET passport_photo = ? WHERE id = ?");
-    return $stmtUpdate->execute([$newPhoto, $studentId]);
+    $stmtUpdate = $db->prepare("UPDATE students SET passport_photo = ?, photo_orientation = ? WHERE id = ?");
+    return $stmtUpdate->execute([$newPhoto, $newOrientation, $studentId]);
 }
 
 

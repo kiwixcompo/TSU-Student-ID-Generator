@@ -292,3 +292,28 @@ function truncate($text, $length = 50, $suffix = '...') {
     }
     return substr($text, 0, $length) . $suffix;
 }
+
+/**
+ * Detect orientation of a base64 encoded image string.
+ * Returns 'landscape', 'portrait', 'square', or 'unknown'.
+ */
+function getBase64ImageOrientation($base64String) {
+    if (empty($base64String)) return 'unknown';
+    if (strpos($base64String, 'data:') !== 0) return 'unknown';
+    
+    $parts = explode(',', $base64String, 2);
+    if (count($parts) !== 2) return 'unknown';
+    
+    $binaryData = @base64_decode($parts[1]);
+    if (!$binaryData) return 'unknown';
+    
+    $size = @getimagesizefromstring($binaryData);
+    if (!$size) return 'unknown';
+    
+    $width = $size[0];
+    $height = $size[1];
+    if ($width > $height) return 'landscape';
+    if ($width < $height) return 'portrait';
+    return 'square';
+}
+
