@@ -19,8 +19,21 @@ class Database {
                 PDO::ATTR_EMULATE_PREPARES => false,
             ];
             $this->conn = new PDO($dsn, DB_USER, DB_PASS, $options);
+            $this->autoMigrateSchema();
         } catch (PDOException $e) {
             die("Database connection failed: " . $e->getMessage());
+        }
+    }
+    
+    private function autoMigrateSchema() {
+        try {
+            $chk = $this->conn->query("SHOW COLUMNS FROM students LIKE 'photo_orientation'")->fetch();
+            if (!$chk) {
+                $this->conn->exec("ALTER TABLE students ADD COLUMN photo_orientation VARCHAR(10) DEFAULT 'portrait' AFTER passport_photo");
+                $this->conn->exec("ALTER TABLE students ADD INDEX idx_photo_orientation (photo_orientation)");
+            }
+        } catch (PDOException $e) {
+            // Ignore failure to prevent breaking the application
         }
     }
     

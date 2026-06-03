@@ -352,6 +352,18 @@ if (isPost() && post('action') === 'save' && $editId) {
                         <?php endif; ?>
                     </div>
 
+                    <!-- Rotate Controls -->
+                    <div class="rotate-controls" id="rotateControls" style="<?php echo empty($student['has_photo']) ? 'display: none;' : 'display: flex;'; ?> flex-direction: column; gap: 0.5rem; justify-content: center; height: 140px;">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnRotateCCW" style="padding: 0.45rem 0.6rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;" title="Rotate Counter-Clockwise">
+                            <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                            ↺ CCW
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnRotateCW" style="padding: 0.45rem 0.6rem; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;" title="Rotate Clockwise">
+                            <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            ↻ CW
+                        </button>
+                    </div>
+
                     <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
                         <img id="photoPreviewImg" src="" alt="Preview">
                         <svg style="width:32px;height:32px;stroke:var(--gray-400);stroke-width:1.5;margin-bottom:.5rem;" fill="none" viewBox="0 0 24 24">
@@ -652,6 +664,10 @@ if (photoInput) {
                     }
                 }
                 
+                // Show rotate controls
+                const rotateControls = document.getElementById('rotateControls');
+                if (rotateControls) rotateControls.style.display = 'flex';
+                
                 // Clear inputs
                 photoInput.value = '';
                 if (previewImg) previewImg.style.display = 'none';
@@ -663,6 +679,60 @@ if (photoInput) {
             if (loader) loader.classList.remove('active');
             showNotification('An error occurred during photo upload.', 'error');
         });
+    });
+}
+
+// ── Photo rotation ──
+const btnRotateCW = document.getElementById('btnRotateCW');
+const btnRotateCCW = document.getElementById('btnRotateCCW');
+
+if (btnRotateCW) {
+    btnRotateCW.addEventListener('click', () => doRotatePhoto('cw'));
+}
+if (btnRotateCCW) {
+    btnRotateCCW.addEventListener('click', () => doRotatePhoto('ccw'));
+}
+
+function doRotatePhoto(direction) {
+    const loader = document.getElementById('photoLoader');
+    if (loader) {
+        loader.querySelector('span').textContent = 'Rotating...';
+        loader.classList.add('active');
+    }
+    
+    const formData = new FormData();
+    formData.append('action', 'rotate_photo');
+    formData.append('student_id', '<?php echo $student['id'] ?? 0; ?>');
+    formData.append('direction', direction);
+    
+    fetch('ajax-handlers.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (loader) {
+            loader.classList.remove('active');
+            loader.querySelector('span').textContent = 'Uploading...'; // Reset text
+        }
+        if (result.success) {
+            showNotification('Passport photo rotated successfully!', 'success');
+            
+            // Reload image with cache buster
+            const currentPhotoEl = document.getElementById('currentPhoto');
+            if (currentPhotoEl && currentPhotoEl.tagName === 'IMG') {
+                currentPhotoEl.src = '../avatar.php?id=<?php echo $student['id'] ?? 0; ?>&t=' + new Date().getTime();
+            }
+        } else {
+            showNotification(result.error || 'Failed to rotate photo', 'error');
+        }
+    })
+    .catch(error => {
+        if (loader) {
+            loader.classList.remove('active');
+            loader.querySelector('span').textContent = 'Uploading...';
+        }
+        showNotification('An error occurred during photo rotation.', 'error');
     });
 }
 
