@@ -11,6 +11,10 @@ if ($reg_number) {
     $student = getStudentByRegNumber($reg_number);
     $found   = ($student !== false);
 }
+
+$isSandwich = ($student && $student['programme'] === 'Sandwich');
+$primaryColor = $isSandwich ? '#C8A27A' : '#166534';
+$darkPrimaryColor = $isSandwich ? '#A37E58' : '#14532d';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -21,6 +25,11 @@ if ($reg_number) {
     <link rel="icon" type="image/png" href="<?php echo asset('public/tsu-logo.png'); ?>">
     <link rel="stylesheet" href="<?php echo asset('assets/css/style.css'); ?>">
     <style>
+        :root {
+            --primary-color: <?php echo $primaryColor; ?>;
+            --dark-primary-color: <?php echo $darkPrimaryColor; ?>;
+        }
+
         body { background: #f3f4f6; min-height: 100vh; }
 
         .verify-wrap {
@@ -42,7 +51,7 @@ if ($reg_number) {
 
         /* ── Header ── */
         .v-header {
-            background: linear-gradient(135deg, #166534 0%, #14532d 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-primary-color) 100%);
             padding: 1.75rem 2rem;
             display: flex;
             align-items: center;
@@ -66,18 +75,20 @@ if ($reg_number) {
         .profile-photo {
             width: 140px;
             height: 160px;
-            object-fit: cover;
+            object-fit: contain;
+            object-position: center;
             border-radius: .75rem;
-            border: 3px solid #166534;
+            border: 3px solid var(--primary-color);
             box-shadow: 0 4px 12px rgba(0,0,0,.12);
             display: block;
+            background: #fff;
         }
         .photo-placeholder {
             width: 140px;
             height: 160px;
             background: #e2e8f0;
             border-radius: .75rem;
-            border: 3px solid #166534;
+            border: 3px solid var(--primary-color);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -91,7 +102,7 @@ if ($reg_number) {
         .profile-name {
             font-size: 1.4rem;
             font-weight: 800;
-            color: #14532d;
+            color: var(--dark-primary-color);
             margin: 0 0 1rem;
             line-height: 1.2;
         }
@@ -103,7 +114,7 @@ if ($reg_number) {
         .detail-table .lbl {
             width: 130px;
             font-weight: 700;
-            color: #166534;
+            color: var(--primary-color);
             white-space: nowrap;
         }
         .detail-table .val { color: #111827; font-weight: 600; }
@@ -149,7 +160,7 @@ if ($reg_number) {
             font-size: .85rem;
             color: #6b7280;
         }
-        .v-footer a { color: #166534; font-weight: 600; text-decoration: none; }
+        .v-footer a { color: var(--primary-color); font-weight: 600; text-decoration: none; }
     </style>
 </head>
 <body>

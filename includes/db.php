@@ -429,7 +429,7 @@ function getStudentStats(string $programme = null): array {
     $stmt = $db->prepare("
         SELECT 
             COUNT(*) as total,
-            SUM(CASE WHEN status = 'id_generated' THEN 1 ELSE 0 END) as generated,
+            SUM(CASE WHEN status = 'id_generated' THEN 1 ELSE 0 END) as `generated`,
             SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending
         FROM students
         $where

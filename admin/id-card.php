@@ -54,6 +54,12 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        :root {
+            --primary-color: <?php echo ($student['programme'] === 'Sandwich') ? '#C8A27A' : '#166534'; ?>;
+            --dark-primary-color: <?php echo ($student['programme'] === 'Sandwich') ? '#A37E58' : '#14532d'; ?>;
+            --watermark-color: <?php echo ($student['programme'] === 'Sandwich') ? 'rgba(200, 162, 122, 0.05)' : 'rgba(22, 101, 52, 0.05)'; ?>;
+        }
+
         /* ── PAGE ── */
         body {
             background: #f0f0f0;
@@ -84,7 +90,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
             align-items: center;
             gap: .5rem;
         }
-        .controls-left a:hover { color: #166534; }
+        .controls-left a:hover { color: var(--primary-color); }
         .controls-left svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; }
         .controls-right { display: flex; gap: .75rem; flex-wrap: wrap; }
 
@@ -117,7 +123,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
 
         /* ══════════════════════════════
            FRONT
-        ══════════════════════════════ */
+           ══════════════════════════════ */
         .id-card-front {
             height: 100%;
             position: relative;
@@ -152,7 +158,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
             margin-bottom: 3px;
         }
         .uni-name {
-            color: #166534;
+            color: var(--primary-color);
             font-weight: 800;
             font-size: 15px;
             text-transform: uppercase;
@@ -161,12 +167,12 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
         }
         .uni-location {
             display: inline-block;
-            color: #166534;
+            color: var(--primary-color);
             font-weight: 600;
             font-size: 12px;
             text-transform: uppercase;
-            border-top: 1px solid #166534;
-            border-bottom: 1px solid #166534;
+            border-top: 1px solid var(--primary-color);
+            border-bottom: 1px solid var(--primary-color);
             padding: 1px 8px;
             margin-top: 2px;
         }
@@ -185,9 +191,10 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
         .profile-photo {
             width: 125px;
             height: 150px;
-            object-fit: cover;
+            object-fit: contain;
+            object-position: center;
             border-radius: 8px;
-            border: 3px solid #166534;
+            border: 3px solid var(--primary-color);
             box-shadow: 0 3px 6px rgba(0,0,0,.15);
             background: #fff;
         }
@@ -202,7 +209,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
             font-size: 50px;
             font-weight: bold;
             border-radius: 8px;
-            border: 3px solid #166534;
+            border: 3px solid var(--primary-color);
         }
 
         /* ── Vertical bar ── */
@@ -212,7 +219,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
             bottom: 40px;
             width: 40px;
             height: 195px;
-            background-color: #166534;
+            background-color: var(--primary-color);
             color: white;
             display: flex;
             align-items: center;
@@ -240,7 +247,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
             padding: 0 10px;
         }
         .full-name {
-            color: #14532d;
+            color: var(--dark-primary-color);
             font-weight: 800;
             font-size: 17px;
             margin: 0;
@@ -271,7 +278,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
         .details-table td { vertical-align: top; padding-bottom: 6px; }
         .details-label {
             font-weight: 800;
-            color: #166534;
+            color: var(--primary-color);
             width: 52px;
             white-space: nowrap;
             font-size: 11px;
@@ -291,7 +298,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
             position: absolute;
             bottom: 0; left: 0; right: 0;
             height: 40px;
-            background: #166534;
+            background: var(--primary-color);
             color: white;
             display: flex;
             align-items: center;
@@ -303,7 +310,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
 
         /* ══════════════════════════════
            BACK
-        ══════════════════════════════ */
+           ══════════════════════════════ */
         .id-card-back {
             height: 100%;
             position: relative;
@@ -318,7 +325,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
             transform: translate(-50%, -50%) rotate(-30deg);
             font-size: 120px;
             font-weight: 900;
-            color: rgba(22, 101, 52, 0.05);
+            color: var(--watermark-color);
             z-index: 0;
             pointer-events: none;
             user-select: none;
@@ -337,7 +344,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
         .qr-container { margin-bottom: 20px; text-align: center; }
         .scan-instruction {
             font-size: 14px;
-            color: #166534;
+            color: var(--primary-color);
             font-weight: 800;
             margin-bottom: 10px;
             text-transform: uppercase;
@@ -346,7 +353,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
         .qr-code {
             width: 200px;
             height: 200px;
-            border: 4px solid #14532d;
+            border: 4px solid var(--dark-primary-color);
             border-radius: 12px;
             padding: 5px;
             background: white;
@@ -385,7 +392,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
             margin-bottom: 5px;
         }
         .return-info strong {
-            color: #166534;
+            color: var(--primary-color);
             display: block;
             font-size: 13px;
             margin: 2px 0;
@@ -394,7 +401,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
             position: absolute;
             bottom: 0; left: 0; right: 0;
             height: 40px;
-            background: #166534;
+            background: var(--primary-color);
             color: white;
             display: flex;
             align-items: center;
@@ -432,8 +439,8 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
         .btn:hover { opacity: .85; }
         .btn:disabled { opacity: .5; cursor: not-allowed; }
         .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
-        .btn-primary   { background: #166534; color: white; }
-        .btn-outline   { background: transparent; color: #166534; border: 2px solid #166534; }
+        .btn-primary   { background: var(--primary-color); color: white; }
+        .btn-outline   { background: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); }
 
         @media print {
             body { background: white; padding: 0; }
@@ -600,7 +607,7 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
 
         width: 190,
         height: 190,
-        colorDark: '#14532d',
+        colorDark: '<?php echo ($student['programme'] === 'Sandwich') ? '#A37E58' : '#14532d'; ?>',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
     });

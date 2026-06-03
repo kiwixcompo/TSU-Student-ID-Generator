@@ -17,6 +17,10 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
   const [logoSrc, setLogoSrc] = useState('/tsu-logo.png');
   const [passportSrc, setPassportSrc] = useState(student.passport_photo);
 
+  const isSandwich = student.programme === 'Sandwich';
+  const primaryColor = isSandwich ? '#C8A27A' : '#166534';
+  const darkPrimaryColor = isSandwich ? '#A37E58' : '#14532d';
+
   useEffect(() => {
     const toDataURL = async (url: string) => {
       if (!url || url.startsWith('data:')) return url;
@@ -90,7 +94,7 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
       
       {/* Controls Container */}
       <div className="max-w-4xl w-full mb-8 flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-lg shadow print:hidden">
-        <Link href="/admin/dashboard" className="inline-flex items-center text-gray-600 hover:text-[#008000] mb-4 sm:mb-0 transition font-medium">
+        <Link href="/admin/dashboard" className="inline-flex items-center text-gray-600 hover:text-green-700 transition font-medium" style={{ color: primaryColor }}>
           <ArrowLeft size={18} className="mr-2" /> Back to Dashboard
         </Link>
         <div className="flex space-x-4">
@@ -103,7 +107,8 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="inline-flex items-center px-4 py-2 bg-[#008000] hover:bg-green-700 text-white rounded-md font-medium transition disabled:opacity-50"
+            className="inline-flex items-center px-4 py-2 text-white rounded-md font-medium transition disabled:opacity-50"
+            style={{ backgroundColor: primaryColor }}
           >
             <Download size={18} className="mr-2" /> {downloading ? 'Exporting...' : 'Export as PNG'}
           </button>
@@ -126,9 +131,18 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
           style={{ width: '260px', height: '412px' }}
         >
           {/* Background Texture/Watermark */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #008000 1.5px, transparent 1.5px)', backgroundSize: '15px 15px' }}></div>
+          <div 
+            className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+            style={{ 
+              backgroundImage: `radial-gradient(circle, ${primaryColor} 1.5px, transparent 1.5px)`, 
+              backgroundSize: '15px 15px' 
+            }}
+          ></div>
           <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-0 overflow-hidden">
-            <span className="text-green-900 text-[120px] font-black rotate-[-45deg] select-none tracking-tighter">TSU</span>
+            <span 
+              className="text-[120px] font-black rotate-[-45deg] select-none tracking-tighter"
+              style={{ color: darkPrimaryColor }}
+            >TSU</span>
           </div>
 
           {/* Header */}
@@ -145,22 +159,34 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
             />
             
             <div className="text-center space-y-1">
-              <p className="text-[13px] font-extrabold text-green-900 leading-none uppercase tracking-wide drop-shadow-sm">Taraba State University</p>
+              <p 
+                className="text-[13px] font-extrabold leading-none uppercase tracking-wide drop-shadow-sm"
+                style={{ color: darkPrimaryColor }}
+              >Taraba State University</p>
               <div className="inline-flex flex-col items-center">
-                <p className="text-[10px] font-bold text-green-800 leading-none uppercase tracking-widest pb-0.5">Jalingo</p>
-                <div className="w-12 h-[1.5px] bg-green-800 opacity-60"></div>
+                <p 
+                  className="text-[10px] font-bold leading-none uppercase tracking-widest pb-0.5"
+                  style={{ color: primaryColor }}
+                >Jalingo</p>
+                <div 
+                  className="w-12 h-[1.5px] opacity-60"
+                  style={{ backgroundColor: primaryColor }}
+                ></div>
               </div>
             </div>
           </div>
 
           {/* Photo */}
           <div className="flex justify-center mt-2 z-10 shrink-0">
-            <div className="relative p-0.5 bg-green-700 rounded shadow-md">
+            <div 
+              className="relative p-0.5 rounded shadow-md"
+              style={{ backgroundColor: primaryColor }}
+            >
               <div className="w-28 h-32 border border-white rounded-sm bg-white overflow-hidden">
                 <img 
                   src={passportSrc} 
                   alt="Student Passport"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain object-center"
                 />
               </div>
             </div>
@@ -168,7 +194,10 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
 
           {/* Name & Title */}
           <div className="text-center mt-1 px-2 z-10 shrink-0 mb-1">
-            <p className="text-[12px] font-extrabold text-green-900 uppercase leading-snug px-1 line-clamp-2 drop-shadow-sm">
+            <p 
+              className="text-[12px] font-extrabold uppercase leading-snug px-1 line-clamp-2 drop-shadow-sm"
+              style={{ color: darkPrimaryColor }}
+            >
               {student.last_name}, {student.first_name} {student.middle_name}
             </p>
             <p className="text-[9px] text-gray-700 font-bold uppercase mt-1 tracking-wider">
@@ -179,7 +208,10 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
           {/* Info Section with Vertical Bar */}
           <div className="flex flex-1 w-full relative z-10 items-stretch mb-1">
             {/* The vertical bar */}
-            <div className="w-9 ml-3 bg-green-700 rounded-t-xl relative flex items-center justify-center shadow-inner overflow-hidden shrink-0 self-stretch mt-1.5">
+            <div 
+              className="w-9 ml-3 rounded-t-xl relative flex items-center justify-center shadow-inner overflow-hidden shrink-0 self-stretch mt-1.5"
+              style={{ backgroundColor: primaryColor }}
+            >
               <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent"></div>
               <span 
                 className="text-white text-[8.5px] font-extrabold uppercase tracking-[0.08em] drop-shadow-sm whitespace-nowrap z-10 leading-[1.3]"
@@ -192,22 +224,34 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
             {/* Details */}
             <div className="flex-1 flex flex-col justify-end pt-1 pb-1.5 pl-3 pr-2 text-[10px] space-y-1.5">
               <div className="flex flex-col items-start leading-[1.1]">
-                <span className="font-extrabold text-green-800 text-[10px] uppercase tracking-wider mb-0.5">Reg No:</span>
+                <span 
+                  className="font-extrabold text-[10px] uppercase tracking-wider mb-0.5"
+                  style={{ color: primaryColor }}
+                >Reg No:</span>
                 <span className="text-gray-900 font-black uppercase text-[13px] break-all">{student.reg_number}</span>
               </div>
               <div className="flex flex-col items-start leading-[1.1]">
-                <span className="font-extrabold text-green-800 text-[10px] uppercase tracking-wider mb-0.5">Faculty:</span>
+                <span 
+                  className="font-extrabold text-[10px] uppercase tracking-wider mb-0.5"
+                  style={{ color: primaryColor }}
+                >Faculty:</span>
                 <span className="text-gray-900 font-bold text-[12px] leading-tight break-words pr-1">{student.faculty}</span>
               </div>
               <div className="flex flex-col items-start leading-[1.1]">
-                <span className="font-extrabold text-green-800 text-[10px] uppercase tracking-wider mb-0.5">Dept:</span>
+                <span 
+                  className="font-extrabold text-[10px] uppercase tracking-wider mb-0.5"
+                  style={{ color: primaryColor }}
+                >Dept:</span>
                 <span className="text-gray-900 font-bold text-[12px] leading-tight break-words pr-1">{student.department || student.programme}</span>
               </div>
             </div>
           </div>
 
           {/* Bottom Bar */}
-          <div className="h-8 bg-green-800 w-full flex items-center justify-center shrink-0 z-10 relative overflow-hidden">
+          <div 
+            className="h-8 w-full flex items-center justify-center shrink-0 z-10 relative overflow-hidden"
+            style={{ backgroundColor: primaryColor }}
+          >
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
             <p className="text-[9px] text-white font-medium/80 z-10">Issued: {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric'})}</p>
           </div>
@@ -221,26 +265,50 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
         >
           {/* Background Texture */}
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none flex flex-col items-center justify-center space-y-8 z-0">
-            <span className="text-green-900 text-[80px] font-black rotate-[-30deg] select-none tracking-tighter">TSU</span>
-            <span className="text-green-900 text-[80px] font-black rotate-[-30deg] select-none tracking-tighter">TSU</span>
+            <span 
+              className="text-[80px] font-black rotate-[-30deg] select-none tracking-tighter"
+              style={{ color: darkPrimaryColor }}
+            >TSU</span>
+            <span 
+              className="text-[80px] font-black rotate-[-30deg] select-none tracking-tighter"
+              style={{ color: darkPrimaryColor }}
+            >TSU</span>
           </div>
 
-          <p className="text-[12px] font-extrabold text-green-900 uppercase tracking-[0.05em] mb-3 z-10 text-center">
+          <p 
+            className="text-[12px] font-extrabold uppercase tracking-[0.05em] mb-3 z-10 text-center"
+            style={{ color: darkPrimaryColor }}
+          >
             Scan this to verify
           </p>
           
-          <div className="border-[3px] border-green-800 rounded-xl p-2.5 bg-white z-10 shadow-sm relative">
+          <div 
+            className="border-[3px] rounded-xl p-2.5 bg-white z-10 shadow-sm relative"
+            style={{ borderColor: primaryColor }}
+          >
             <QRCodeSVG 
               value={`Name: ${student.last_name}, ${student.first_name} ${student.middle_name || ''}\nReg No: ${student.reg_number}\nFaculty: ${student.faculty}\nDept: ${student.department || student.programme}\nVerify: ${verificationUrl}`} 
               size={130}
               level="M"
-              fgColor="#14532d"
+              fgColor={darkPrimaryColor}
             />
             {/* Corner Accents */}
-            <div className="absolute top-1 left-1 w-4 h-4 border-t-2 border-l-2 border-green-400 rounded-tl"></div>
-            <div className="absolute top-1 right-1 w-4 h-4 border-t-2 border-r-2 border-green-400 rounded-tr"></div>
-            <div className="absolute bottom-1 left-1 w-4 h-4 border-b-2 border-l-2 border-green-400 rounded-bl"></div>
-            <div className="absolute bottom-1 right-1 w-4 h-4 border-b-2 border-r-2 border-green-400 rounded-br"></div>
+            <div 
+              className="absolute top-1 left-1 w-4 h-4 border-t-2 border-l-2 rounded-tl"
+              style={{ borderColor: isSandwich ? '#E3CDB6' : '#4ade80' }}
+            ></div>
+            <div 
+              className="absolute top-1 right-1 w-4 h-4 border-t-2 border-r-2 rounded-tr"
+              style={{ borderColor: isSandwich ? '#E3CDB6' : '#4ade80' }}
+            ></div>
+            <div 
+              className="absolute bottom-1 left-1 w-4 h-4 border-b-2 border-l-2 rounded-bl"
+              style={{ borderColor: isSandwich ? '#E3CDB6' : '#4ade80' }}
+            ></div>
+            <div 
+              className="absolute bottom-1 right-1 w-4 h-4 border-b-2 border-r-2 rounded-br"
+              style={{ borderColor: isSandwich ? '#E3CDB6' : '#4ade80' }}
+            ></div>
           </div>
 
           <div className="border-[2px] border-red-600 rounded-lg py-1.5 px-8 mt-5 bg-white z-10 flex flex-col items-center shadow-sm">
@@ -250,12 +318,18 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
 
           <div className="mt-auto mb-4 text-center z-10">
             <p className="text-[9px] text-gray-500 mb-1">If found, please return to:</p>
-            <p className="text-[11px] font-black text-green-800 uppercase tracking-wide">SECURITY UNIT</p>
+            <p 
+              className="text-[11px] font-black uppercase tracking-wide"
+              style={{ color: primaryColor }}
+            >SECURITY UNIT</p>
             <p className="text-[9px] text-gray-600">Taraba State University</p>
           </div>
 
           {/* Bottom Bar */}
-          <div className="h-10 bg-green-800 w-full flex items-center justify-center shrink-0 z-10 relative overflow-hidden">
+          <div 
+            className="h-10 w-full flex items-center justify-center shrink-0 z-10 relative overflow-hidden"
+            style={{ backgroundColor: primaryColor }}
+          >
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
             <p className="text-[9px] text-white font-medium z-10">Property of Taraba State University</p>
           </div>

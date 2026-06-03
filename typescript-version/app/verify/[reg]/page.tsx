@@ -8,12 +8,19 @@ export default async function VerifyPage({ params }: { params: Promise<{ reg: st
   
   const student = await verifyStudent(decodedReg);
 
+  const isSandwich = student?.programme === 'Sandwich';
+  const primaryColor = isSandwich ? '#C8A27A' : '#166534';
+  const darkPrimaryColor = isSandwich ? '#A37E58' : '#14532d';
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 font-sans">
       <div className="max-w-md w-full bg-white rounded-lg shadow-2xl overflow-hidden border border-slate-300 relative">
-        <div className="absolute top-0 left-0 w-full h-1 bg-green-600"></div>
+        <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: isSandwich ? primaryColor : '#16a34a' }}></div>
         <div className="bg-slate-50/50 pt-8 pb-4 text-center border-b border-slate-200">
-          <div className="w-16 h-16 bg-green-800 text-white rounded-lg flex items-center justify-center font-bold mx-auto mb-3 shadow-sm border border-green-900 border-b-4">
+          <div 
+            className="w-16 h-16 text-white rounded-lg flex items-center justify-center font-bold mx-auto mb-3 shadow-sm border border-b-4"
+            style={{ backgroundColor: primaryColor, borderColor: darkPrimaryColor }}
+          >
             TSU
           </div>
           <h1 className="text-xl font-extrabold text-slate-800 tracking-tight uppercase">Taraba State University</h1>
@@ -22,8 +29,15 @@ export default async function VerifyPage({ params }: { params: Promise<{ reg: st
 
         {student ? (
           <div className="p-6">
-            <div className="flex bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded mb-6 items-center justify-center shadow-sm">
-              <ShieldCheck className="mr-2 text-green-700" size={24} />
+            <div 
+              className="flex px-4 py-3 rounded mb-6 items-center justify-center shadow-sm border"
+              style={{
+                backgroundColor: isSandwich ? '#FAF4ED' : '#f0fdf4',
+                borderColor: isSandwich ? '#dfc19f' : '#bbf7d0',
+                color: isSandwich ? darkPrimaryColor : '#166534'
+              }}
+            >
+              <ShieldCheck className="mr-2" size={24} style={{ color: isSandwich ? primaryColor : '#15803d' }} />
               <span className="font-extrabold text-lg uppercase tracking-wider">Verified Student</span>
             </div>
 
@@ -32,10 +46,14 @@ export default async function VerifyPage({ params }: { params: Promise<{ reg: st
                   <img 
                     src={student.passport_photo} 
                     alt="Student image" 
-                    className="w-full h-full object-cover rounded-sm"
+                    className="w-full h-full object-contain object-center rounded-sm bg-white"
                   />
                   {student.status === 'id_generated' ? (
-                     <div className="absolute -bottom-2 -right-2 bg-green-600 text-white rounded p-1 border border-green-700" title="ID Card Generated">
+                     <div 
+                       className="absolute -bottom-2 -right-2 text-white rounded p-1 border"
+                       style={{ backgroundColor: primaryColor, borderColor: darkPrimaryColor }}
+                       title="ID Card Generated"
+                     >
                        <ShieldCheck size={16} />
                      </div>
                   ) : null}
@@ -52,7 +70,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ reg: st
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-2">
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Programme</span>
-                    <span className="text-green-700 font-bold uppercase">{student.programme}</span>
+                    <span className="font-bold uppercase" style={{ color: primaryColor }}>{student.programme}</span>
                   </div>
                   <div className="flex justify-between border-b border-slate-100 pb-2">
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Faculty</span>
@@ -77,7 +95,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ reg: st
         )}
         
         <div className="bg-slate-50/50 px-6 py-4 border-t border-slate-200 text-center">
-           <Link href="/" className="text-[10px] text-slate-500 hover:text-green-700 hover:underline font-bold tracking-widest uppercase">
+           <Link href="/" className="text-[10px] text-slate-500 hover:underline font-bold tracking-widest uppercase">
              Back to System Home
            </Link>
         </div>
