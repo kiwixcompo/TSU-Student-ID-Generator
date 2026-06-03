@@ -9,8 +9,8 @@ export default async function VerifyPage({ params }: { params: Promise<{ reg: st
   const student = await verifyStudent(decodedReg);
 
   const isSandwich = student?.programme === 'Sandwich';
-  const primaryColor = isSandwich ? '#C8A27A' : '#166534';
-  const darkPrimaryColor = isSandwich ? '#A37E58' : '#14532d';
+  const primaryColor = isSandwich ? '#946F46' : '#166534';
+  const darkPrimaryColor = isSandwich ? '#735431' : '#14532d';
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 font-sans">
@@ -33,7 +33,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ reg: st
               className="flex px-4 py-3 rounded mb-6 items-center justify-center shadow-sm border"
               style={{
                 backgroundColor: isSandwich ? '#FAF4ED' : '#f0fdf4',
-                borderColor: isSandwich ? '#dfc19f' : '#bbf7d0',
+                borderColor: isSandwich ? '#C4B19D' : '#bbf7d0',
                 color: isSandwich ? darkPrimaryColor : '#166534'
               }}
             >

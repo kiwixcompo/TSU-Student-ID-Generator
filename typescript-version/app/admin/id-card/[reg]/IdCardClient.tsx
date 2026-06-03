@@ -18,8 +18,8 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
   const [passportSrc, setPassportSrc] = useState(student.passport_photo);
 
   const isSandwich = student.programme === 'Sandwich';
-  const primaryColor = isSandwich ? '#C8A27A' : '#166534';
-  const darkPrimaryColor = isSandwich ? '#A37E58' : '#14532d';
+  const primaryColor = isSandwich ? '#946F46' : '#166534';
+  const darkPrimaryColor = isSandwich ? '#735431' : '#14532d';
 
   useEffect(() => {
     const toDataURL = async (url: string) => {
@@ -295,19 +295,19 @@ export default function IdCardClient({ student, baseUrl }: { student: Student, b
             {/* Corner Accents */}
             <div 
               className="absolute top-1 left-1 w-4 h-4 border-t-2 border-l-2 rounded-tl"
-              style={{ borderColor: isSandwich ? '#E3CDB6' : '#4ade80' }}
+              style={{ borderColor: isSandwich ? '#C4B19D' : '#4ade80' }}
             ></div>
             <div 
               className="absolute top-1 right-1 w-4 h-4 border-t-2 border-r-2 rounded-tr"
-              style={{ borderColor: isSandwich ? '#E3CDB6' : '#4ade80' }}
+              style={{ borderColor: isSandwich ? '#C4B19D' : '#4ade80' }}
             ></div>
             <div 
               className="absolute bottom-1 left-1 w-4 h-4 border-b-2 border-l-2 rounded-bl"
-              style={{ borderColor: isSandwich ? '#E3CDB6' : '#4ade80' }}
+              style={{ borderColor: isSandwich ? '#C4B19D' : '#4ade80' }}
             ></div>
             <div 
               className="absolute bottom-1 right-1 w-4 h-4 border-b-2 border-r-2 rounded-br"
-              style={{ borderColor: isSandwich ? '#E3CDB6' : '#4ade80' }}
+              style={{ borderColor: isSandwich ? '#C4B19D' : '#4ade80' }}
             ></div>
           </div>
 

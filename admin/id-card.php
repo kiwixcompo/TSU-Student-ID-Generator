@@ -42,6 +42,11 @@ $nameClass = 'full-name';
 if ($nameLen > 30)      $nameClass .= ' name-extra-long';
 elseif ($nameLen > 25)  $nameClass .= ' name-very-long';
 elseif ($nameLen > 20)  $nameClass .= ' name-long';
+
+$isSandwich = ($student['programme'] === 'Sandwich');
+$primaryColor = $isSandwich ? '#946F46' : '#166534';
+$darkPrimaryColor = $isSandwich ? '#735431' : '#14532d';
+$watermarkColor = $isSandwich ? 'rgba(148, 111, 70, 0.05)' : 'rgba(22, 101, 52, 0.05)';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -55,9 +60,9 @@ elseif ($nameLen > 20)  $nameClass .= ' name-long';
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
-            --primary-color: <?php echo ($student['programme'] === 'Sandwich') ? '#C8A27A' : '#166534'; ?>;
-            --dark-primary-color: <?php echo ($student['programme'] === 'Sandwich') ? '#A37E58' : '#14532d'; ?>;
-            --watermark-color: <?php echo ($student['programme'] === 'Sandwich') ? 'rgba(200, 162, 122, 0.05)' : 'rgba(22, 101, 52, 0.05)'; ?>;
+            --primary-color: <?php echo $primaryColor; ?>;
+            --dark-primary-color: <?php echo $darkPrimaryColor; ?>;
+            --watermark-color: <?php echo $watermarkColor; ?>;
         }
 
         /* ── PAGE ── */

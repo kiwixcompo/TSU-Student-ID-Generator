@@ -13,8 +13,8 @@ if ($reg_number) {
 }
 
 $isSandwich = ($student && $student['programme'] === 'Sandwich');
-$primaryColor = $isSandwich ? '#C8A27A' : '#166534';
-$darkPrimaryColor = $isSandwich ? '#A37E58' : '#14532d';
+$primaryColor = $isSandwich ? '#946F46' : '#166534';
+$darkPrimaryColor = $isSandwich ? '#735431' : '#14532d';
 ?>
 <!DOCTYPE html>
 <html lang="en">
