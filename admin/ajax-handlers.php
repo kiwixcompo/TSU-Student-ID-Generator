@@ -37,6 +37,10 @@ switch ($action) {
     case 'upload_photo':
         handleUploadPhoto();
         break;
+
+    case 'rotate_photo':
+        handleRotatePhoto();
+        break;
     
     default:
         jsonResponse(['success' => false, 'error' => 'Invalid action'], 400);
@@ -148,6 +152,36 @@ function handleUploadPhoto() {
             'success' => true, 
             'message' => 'Passport photo uploaded successfully', 
             'photo' => $passport_photo
+        ]);
+    } catch (Exception $e) {
+        jsonResponse(['success' => false, 'error' => $e->getMessage()]);
+    }
+}
+
+function handleRotatePhoto() {
+    $studentId = post('student_id');
+    $direction = post('direction', 'cw');
+    
+    if (!$studentId) {
+        jsonResponse(['success' => false, 'error' => 'Student ID is required']);
+    }
+    
+    if (!in_array($direction, ['cw', 'ccw'])) {
+        jsonResponse(['success' => false, 'error' => 'Invalid direction']);
+    }
+    
+    try {
+        rotateStudentPhoto($studentId, $direction);
+        
+        $db = getDB();
+        $stmt = $db->prepare("SELECT passport_photo FROM students WHERE id = ?");
+        $stmt->execute([$studentId]);
+        $row = $stmt->fetch();
+        
+        jsonResponse([
+            'success' => true,
+            'message' => 'Image rotated successfully',
+            'photo' => $row['passport_photo']
         ]);
     } catch (Exception $e) {
         jsonResponse(['success' => false, 'error' => $e->getMessage()]);

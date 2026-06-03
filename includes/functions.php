@@ -105,6 +105,43 @@ function compressAndResizeImage($tmpPath, $maxWidth = 400, $maxHeight = 480, $qu
         return false;
     }
     
+    // Auto-rotate JPEGs based on EXIF Orientation
+    if ($type === IMAGETYPE_JPEG && function_exists('exif_read_data')) {
+        $exif = @exif_read_data($tmpPath);
+        if ($exif && !empty($exif['Orientation'])) {
+            $orientation = $exif['Orientation'];
+            switch ($orientation) {
+                case 3:
+                    $rotated = imagerotate($src, 180, 0);
+                    if ($rotated !== false) {
+                        imagedestroy($src);
+                        $src = $rotated;
+                    }
+                    break;
+                case 6:
+                    $rotated = imagerotate($src, -90, 0);
+                    if ($rotated !== false) {
+                        imagedestroy($src);
+                        $src = $rotated;
+                        $temp = $width;
+                        $width = $height;
+                        $height = $temp;
+                    }
+                    break;
+                case 8:
+                    $rotated = imagerotate($src, 90, 0);
+                    if ($rotated !== false) {
+                        imagedestroy($src);
+                        $src = $rotated;
+                        $temp = $width;
+                        $width = $height;
+                        $height = $temp;
+                    }
+                    break;
+            }
+        }
+    }
+    
     // Calculate new dimensions while maintaining aspect ratio
     $ratio = min($maxWidth / $width, $maxHeight / $height);
     if ($ratio < 1) {

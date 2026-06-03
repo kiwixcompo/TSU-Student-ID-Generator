@@ -478,3 +478,69 @@ function getUniqueYears(string $programme = null): array {
     return array_reverse($years);
 }
 
+function rotateStudentPhoto($studentId, $direction) {
+    $db = getDB();
+    
+    // Retrieve only the passport_photo column
+    $stmt = $db->prepare("SELECT passport_photo FROM students WHERE id = ?");
+    $stmt->execute([$studentId]);
+    $row = $stmt->fetch();
+    
+    if (!$row || empty($row['passport_photo'])) {
+        throw new Exception('Student or photo not found.');
+    }
+    
+    $photo = $row['passport_photo'];
+    
+    if (strpos($photo, 'data:') !== 0) {
+        throw new Exception('Invalid photo format.');
+    }
+    
+    $parts = explode(',', $photo, 2);
+    if (count($parts) !== 2) {
+        throw new Exception('Invalid photo encoding.');
+    }
+    
+    $header = $parts[0];
+    $base64Data = $parts[1];
+    
+    $mime = 'image/jpeg';
+    if (preg_match('/data:([^;]+)/', $header, $matches)) {
+        $mime = $matches[1];
+    }
+    
+    $binaryData = base64_decode($base64Data);
+    $src = @imagecreatefromstring($binaryData);
+    
+    if (!$src) {
+        throw new Exception('Could not parse image data.');
+    }
+    
+    // Rotating image: positive values rotate counter-clockwise.
+    // So 'cw' (clockwise) means rotate 270 degrees, and 'ccw' (counter-clockwise) means rotate 90 degrees.
+    $angle = ($direction === 'ccw') ? 90 : 270;
+    $rotated = imagerotate($src, $angle, 0);
+    
+    if (!$rotated) {
+        imagedestroy($src);
+        throw new Exception('Failed to rotate image.');
+    }
+    
+    ob_start();
+    if ($mime === 'image/png') {
+        imagepng($rotated);
+    } else {
+        imagejpeg($rotated, null, 90);
+    }
+    $outputData = ob_get_clean();
+    
+    imagedestroy($src);
+    imagedestroy($rotated);
+    
+    $newPhoto = 'data:' . $mime . ';base64,' . base64_encode($outputData);
+    
+    $stmtUpdate = $db->prepare("UPDATE students SET passport_photo = ? WHERE id = ?");
+    return $stmtUpdate->execute([$newPhoto, $studentId]);
+}
+
+
