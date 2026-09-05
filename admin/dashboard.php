@@ -20,13 +20,15 @@ $page = max(1, (int) get('page', 1));
 
 // ── Filters ───────────────────────────────────────────────────────────────────
 $filters = [
-    'search'     => get('search', ''),
-    'programme'  => get('programme', ''),
-    'status'     => get('status', ''),
-    'printed'    => get('printed', ''),
-    'year'       => get('year', ''),
-    'faculty'    => get('faculty', ''),
-    'department' => get('department', ''),
+    'search'       => get('search', ''),
+    'programme'    => get('programme', ''),
+    'status'       => get('status', ''),
+    'printed'      => get('printed', ''),
+    'printed_date' => get('printed_date', ''),
+    'year'         => get('year', ''),
+    'faculty'      => get('faculty', ''),
+    'department'   => get('department', ''),
+    'sort'         => get('sort', ''),
 ];
 
 // ── Paginated data ────────────────────────────────────────────────────────────
@@ -601,6 +603,11 @@ function pageUrl(int $p, array $extra = []): string {
                             <option value="0" <?php echo get('printed') === '0' ? 'selected' : ''; ?>>Not Printed</option>
                         </select>
                     </div>
+                    
+                    <div class="filter-group">
+                        <label>Printed Date</label>
+                        <input type="date" name="printed_date" id="printedDateFilter" value="<?php echo e(get('printed_date', '')); ?>">
+                    </div>
 
                     <div class="filter-group">
                         <label>Year</label>
@@ -626,6 +633,16 @@ function pageUrl(int $p, array $extra = []): string {
                         <label>Department</label>
                         <select name="department" id="departmentFilter">
                             <option value="">All Departments</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Sort By</label>
+                        <select name="sort" id="sortFilter">
+                            <option value="">Newest First (Default)</option>
+                            <option value="created_at_asc" <?php echo get('sort') === 'created_at_asc' ? 'selected' : ''; ?>>Oldest First</option>
+                            <option value="printed_at_desc" <?php echo get('sort') === 'printed_at_desc' ? 'selected' : ''; ?>>Recently Printed</option>
+                            <option value="printed_at_asc" <?php echo get('sort') === 'printed_at_asc' ? 'selected' : ''; ?>>Oldest Printed</option>
                         </select>
                     </div>
                 </div>

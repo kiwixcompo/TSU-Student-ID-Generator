@@ -197,7 +197,25 @@ function getStudentsPaginated(array $filters, int $page, int $perPage, string $p
         $params[] = $like;
     }
 
+    // Filter: printed date
+    if (!empty($filters['printed_date'])) {
+        $where[]  = 'DATE(printed_at) = ?';
+        $params[] = $filters['printed_date'];
+    }
+
     $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+    // Sort order
+    $orderBy = 'ORDER BY created_at DESC';
+    if (!empty($filters['sort'])) {
+        if ($filters['sort'] === 'printed_at_desc') {
+            $orderBy = 'ORDER BY printed_at DESC, created_at DESC';
+        } elseif ($filters['sort'] === 'printed_at_asc') {
+            $orderBy = 'ORDER BY printed_at ASC, created_at ASC';
+        } elseif ($filters['sort'] === 'created_at_asc') {
+            $orderBy = 'ORDER BY created_at ASC';
+        }
+    }
 
     // Total count
     $countStmt = $db->prepare("SELECT COUNT(*) FROM students $whereSQL");
@@ -206,7 +224,7 @@ function getStudentsPaginated(array $filters, int $page, int $perPage, string $p
 
     // Paginated rows
     $offset = ($page - 1) * $perPage;
-    $rowStmt = $db->prepare("SELECT $cols FROM students $whereSQL ORDER BY created_at DESC LIMIT ? OFFSET ?");
+    $rowStmt = $db->prepare("SELECT $cols FROM students $whereSQL $orderBy LIMIT ? OFFSET ?");
     // PDO needs int binding for LIMIT/OFFSET
     $allParams = array_merge($params, [$perPage, $offset]);
     foreach ($allParams as $i => $val) {
